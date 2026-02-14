@@ -9,13 +9,15 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ### 2. Aseta API-avain
 1. Paina ⚙️-kuvaketta (asetukset)
-2. Hanki ilmainen API-avain: [RapidAPI - Yahoo Finance](https://rapidapi.com/sparior/api/yahoo-finance15)
+2. Hanki ilmainen API-avain: [Finnhub.io](https://finnhub.io/register)
 3. Syötä avain ja paina "Tallenna"
 4. Voit viedä avaimen tiedostoon varmuuskopiota varten
 
+**Huomio:** Finnhub API-avain on turvallista säilyttää selaimen lokaalisessa muistissa, sillä ilmainen avain on rajoitettu (60 pyyntöä/minuutti) eikä mahdollista väärinkäyttöä.
+
 ### 3. Lisää osakkeita
 1. Asetuksissa täytä:
-   - **Symboli**: Esim. `NOKIA.HE` (Helsinki), `AAPL` (USA)
+   - **Symboli**: Esim. `HEX:NOKIA` (Helsinki), `AAPL` (USA)
    - **Määrä**: Osakkeiden lukumäärä
    - **Hankintahinta**: Hinta jonka maksoit per osake
 2. Paina "Lisää osake"
@@ -49,7 +51,7 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 - **Frontend**: Pure HTML/CSS/JavaScript (ei riippuvuuksia)
 - **Tallennus**: IndexedDB (fallback: localStorage)
-- **API**: Yahoo Finance via RapidAPI
+- **API**: Finnhub.io (ilmainen, 60 pyyntöä/minuutti)
 - **PWA**: Service Worker + Manifest
 - **Hosting**: GitHub Pages (ilmainen)
 
@@ -62,20 +64,21 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ## 📊 Pörssit
 
-Tuetut symbolit:
-- 🇫🇮 **Helsinki**: `NOKIA.HE`, `WRT1V.HE`, `NESTE.HE`
+Tuetut symbolit (Finnhub.io muoto):
+- 🇫🇮 **Helsinki**: `HEX:NOKIA`, `HEX:WRT1V`, `HEX:NESTE`
 - 🇺🇸 **USA**: `AAPL`, `MSFT`, `GOOGL`, `TSLA`
-- 🇸🇪 **Tukholma**: `VOLV-B.ST`, `ERIC-B.ST`
-- 🇬🇧 **Lontoo**: `BP.L`, `SHEL.L`
+- 🇸🇪 **Tukholma**: `STO:VOLV-B`, `STO:ERIC-B`
+- 🇬🇧 **Lontoo**: `LSE:BP`, `LSE:SHEL`
 
-Löydät symbolit: [Yahoo Finance](https://finance.yahoo.com/)
+Löydät symbolit: [Finnhub.io Stock Symbols](https://finnhub.io/docs/api/stock-symbols)
 
 ## 🐛 Ongelmanratkaisu
 
 **Hinnat eivät päivity:**
 - Tarkista API-avain asetuksista
 - Varmista että olet online
-- Tarkista että symboli on oikein (esim. `NOKIA.HE`, ei `NOKIA`)
+- Tarkista että symboli on oikein Finnhub-muodossa (esim. `HEX:NOKIA`, ei `NOKIA.HE`)
+- Huomaa: Finnhub ilmainen taso on rajoitettu 60 pyyntöön/minuutti
 
 **Sovellus ei toimi:**
 - Tyhjennä selaimen välimuisti

@@ -32,8 +32,14 @@ self.addEventListener('activate', event => {
 // Fetch
 self.addEventListener('fetch', event => {
   // Skip API calls - always fetch fresh
-  if (event.request.url.includes('rapidapi.com')) {
-    return event.respondWith(fetch(event.request));
+  // Use URL parsing to properly check the hostname
+  try {
+    const url = new URL(event.request.url);
+    if (url.hostname === 'finnhub.io') {
+      return event.respondWith(fetch(event.request));
+    }
+  } catch (e) {
+    // Invalid URL, continue with normal caching
   }
   
   // Network first, fallback to cache
