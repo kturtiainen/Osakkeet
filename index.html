@@ -644,6 +644,14 @@
             AUTO_REFRESH: 5 * 60 * 1000,
         };
         
+        // SECURITY: HTML escaping to prevent XSS attacks
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+        
         // STATE
         let stocks = [];
         let apiKey = '';
@@ -668,7 +676,15 @@
             try {
                 const db = await openDB();
                 const tx = db.transaction('data', 'readwrite');
-                await tx.objectStore('data').put(value, key);
+                const store = tx.objectStore('data');
+                
+                // Properly wrap IDBRequest in a Promise
+                await new Promise((resolve, reject) => {
+                    const request = store.put(value, key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
                 return true;
             } catch (e) {
                 console.error('DB save error:', e);
@@ -681,7 +697,15 @@
             try {
                 const db = await openDB();
                 const tx = db.transaction('data', 'readonly');
-                const result = await tx.objectStore('data').get(key);
+                const store = tx.objectStore('data');
+                
+                // Properly wrap IDBRequest in a Promise
+                const result = await new Promise((resolve, reject) => {
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+                
                 return result;
             } catch (e) {
                 console.error('DB load error:', e);
@@ -771,7 +795,7 @@
         }
         
         async function refreshPrices() {
-            if (stocks.length === 0) return showStatus('Lisä�� osakkeita ensin', 'error');
+            if (stocks.length === 0) return showStatus('Lisää osakkeita ensin', 'error');
             
             const btn = document.getElementById('refreshBtn');
             btn.classList.add('loading');
@@ -962,7 +986,7 @@
                 return `
                     <div class="stock-card">
                         <div class="stock-header">
-                            <div class="stock-symbol">${s.symbol}</div>
+                            <div class="stock-symbol">${escapeHtml(s.symbol)}</div>
                             <div class="stock-change ${change >= 0 ? 'up' : 'down'}">
                                 ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
                             </div>
@@ -1007,7 +1031,7 @@
                 ${stocks.map((s, i) => `
                     <div class="stock-item">
                         <div class="stock-item-info">
-                            <strong>${s.symbol}</strong>
+                            <strong>${escapeHtml(s.symbol)}</strong>
                             <small>${s.shares} kpl @ ${fmt(s.purchasePrice)}</small>
                         </div>
                         <button class="delete-btn" onclick="deleteStock(${i})">Poista</button>
