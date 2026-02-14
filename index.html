@@ -755,7 +755,7 @@
                 const pricePromises = symbols.map(async (originalSymbol) => {
                     // Add .HE suffix for Helsinki Stock Exchange symbols if not already present
                     let apiSymbol = originalSymbol;
-                    if (!originalSymbol.includes(':') && !originalSymbol.includes('.HE')) {
+                    if (!originalSymbol.includes(':') && !originalSymbol.endsWith('.HE')) {
                         apiSymbol = `${originalSymbol}.HE`;
                     }
                     
