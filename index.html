@@ -598,8 +598,8 @@
             
             <!-- API Key -->
             <div class="form-group">
-                <label>🔑 Finnhub API-avain</label>
-                <input type="password" id="apiKeyInput" placeholder="Syötä Finnhub-avain">
+                <label>🔑 Yahoo Finance API-avain</label>
+                <input type="password" id="apiKeyInput" placeholder="Syötä API-avain">
                 <div class="btn-group" style="margin-top: 10px;">
                     <button class="btn btn-secondary btn-small" onclick="saveApiKey()">Tallenna</button>
                     <button class="btn btn-secondary btn-small" onclick="exportApiKey()">💾 Vie</button>
@@ -611,7 +611,7 @@
             <!-- Add Stock -->
             <div class="form-group">
                 <label>➕ Lisää osake</label>
-                <input type="text" id="symbolInput" placeholder="Symboli (esim. AKTIA, FORTUM, NOKIA)" style="margin-bottom: 10px;">
+                <input type="text" id="symbolInput" placeholder="Symboli (esim. NOKIA.HE, AAPL)" style="margin-bottom: 10px;">
                 <input type="number" id="sharesInput" placeholder="Määrä (kpl)" step="0.01" style="margin-bottom: 10px;">
                 <input type="number" id="priceInput" placeholder="Hankintahinta (€)" step="0.01" style="margin-bottom: 10px;">
                 <button class="btn btn-primary" onclick="addStock()">Lisää osake</button>
@@ -639,9 +639,9 @@
     <script>
         // CONFIG
         const CONFIG = {
-            API_BASE: 'https://finnhub.io/api/v1',
-            CACHE_DURATION: 5 * 60 * 1000,
-            AUTO_REFRESH: 5 * 60 * 1000,
+            API_HOST: 'yahoo-finance15.p.rapidapi.com',
+            DAILY_REFRESH_HOUR: 14,
+            DAILY_REFRESH_MINUTE: 0,
         };
         
         // SECURITY: HTML escaping to prevent XSS attacks
@@ -750,58 +750,30 @@
             }
             
             try {
-                // Finnhub.io has a 60 req/min limit
-                // Process symbols in batches of 30 with 1.5s delay between batches
-                const BATCH_SIZE = 30;
-                const BATCH_DELAY_MS = 1500;
-                const prices = {}; // Accumulate prices from all batches
+                // Yahoo Finance via RapidAPI - batch endpoint fetches all symbols in a single request
+                const tickerParam = symbols.join(',');
+                const url = `https://${CONFIG.API_HOST}/api/v1/markets/stock/quotes?ticker=${encodeURIComponent(tickerParam)}`;
                 
-                for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
-                    const batch = symbols.slice(i, i + BATCH_SIZE);
-                    
-                    const pricePromises = batch.map(async (originalSymbol) => {
-                        // Add .HE suffix for Helsinki Stock Exchange symbols if not already present
-                        let apiSymbol = originalSymbol;
-                        if (!originalSymbol.includes(':') && !originalSymbol.endsWith('.HE')) {
-                            apiSymbol = `${originalSymbol}.HE`;
-                        }
-                        
-                        const encodedSymbol = encodeURIComponent(apiSymbol);
-                        const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}`;
-                        
-                        const response = await fetch(url, {
-                            headers: {
-                                'X-Finnhub-Token': apiKey
-                            },
-                            signal: AbortSignal.timeout(15000)
-                        });
-                        
-                        if (!response.ok) throw new Error(`HTTP ${response.status} for ${apiSymbol}`);
-                        
-                        const data = await response.json();
-                        
-                        // Finnhub API response format: { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
-                        // Return with original symbol (without .HE suffix) for storage
-                        return { symbol: originalSymbol, price: data.c };
-                    });
-                    
-                    const results = await Promise.allSettled(pricePromises);
-                    
-                    results.forEach((result) => {
-                        if (result.status === 'fulfilled') {
-                            const { symbol, price } = result.value;
-                            if (price != null && price > 0) {
-                                prices[symbol] = parseFloat(price);
-                            }
-                        } else {
-                            console.error('Failed to fetch price:', result.reason);
+                const response = await fetch(url, {
+                    headers: {
+                        'X-RapidAPI-Key': apiKey,
+                        'X-RapidAPI-Host': CONFIG.API_HOST
+                    },
+                    signal: AbortSignal.timeout(15000)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                
+                // Yahoo Finance response format: { body: [{ symbol: "NOKIA.HE", regularMarketPrice: 4.23 }, ...] }
+                const prices = {};
+                if (data.body && Array.isArray(data.body)) {
+                    data.body.forEach(item => {
+                        if (item.symbol && item.regularMarketPrice != null && item.regularMarketPrice > 0) {
+                            prices[item.symbol] = parseFloat(item.regularMarketPrice);
                         }
                     });
-                    
-                    // Add delay between batches (except after the last batch)
-                    if (i + BATCH_SIZE < symbols.length) {
-                        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
-                    }
                 }
                 
                 await dbSet('priceCache', { data: prices, time: Date.now() });
@@ -823,8 +795,13 @@
             }
         }
         
-        async function refreshPrices() {
+        async function refreshPrices(isAutomatic = false, showQuotaPrompt = true) {
             if (stocks.length === 0) return showStatus('Lisää osakkeita ensin', 'error');
+            
+            // Manual refresh: show confirmation about quota
+            if (!isAutomatic && showQuotaPrompt) {
+                if (!confirm('Kuukausittainen raja on 100 pyyntöä.\nHaluatko päivittää nyt?')) return;
+            }
             
             const btn = document.getElementById('refreshBtn');
             btn.classList.add('loading');
@@ -1097,13 +1074,14 @@
         
         function updateTimestamp() {
             const now = new Date();
+            const autoTime = `${CONFIG.DAILY_REFRESH_HOUR}:${String(CONFIG.DAILY_REFRESH_MINUTE).padStart(2, '0')}`;
             document.getElementById('timestamp').textContent = 
                 'Päivitetty: ' + now.toLocaleString('fi-FI', { 
                     day: 'numeric',
                     month: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
-                });
+                }) + ` • Auto klo ${autoTime}`;
         }
         
         function updateApiStatus(ok) {
@@ -1141,15 +1119,69 @@
             }).format(num) + ' €';
         }
         
-        // AUTO-REFRESH
-        function startAutoRefresh() {
-            if (refreshTimer) clearInterval(refreshTimer);
-            refreshTimer = setInterval(() => {
-                if (stocks.length > 0 && navigator.onLine && apiKey) {
-                    console.log('Auto-refresh');
-                    refreshPrices();
+        // DAILY REFRESH SCHEDULER
+        function scheduleDailyRefresh() {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            
+            const now = new Date();
+            // Use Finnish (Europe/Helsinki) timezone in a timezone-safe way
+            const helsinkiFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Europe/Helsinki',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const helsinkiParts = helsinkiFormatter.formatToParts(now).reduce((acc, part) => {
+                if (part.type !== 'literal') {
+                    acc[part.type] = part.value;
                 }
-            }, CONFIG.AUTO_REFRESH);
+                return acc;
+            }, {});
+            const helYear = Number(helsinkiParts.year);
+            const helMonth = Number(helsinkiParts.month);
+            const helDay = Number(helsinkiParts.day);
+            const helHour = Number(helsinkiParts.hour);
+            const helMinute = Number(helsinkiParts.minute);
+            const helSecond = Number(helsinkiParts.second);
+            
+            // Date representing the current instant, using Helsinki wall-clock time encoded in UTC
+            const finnish = new Date(Date.UTC(helYear, helMonth - 1, helDay, helHour, helMinute, helSecond));
+            
+            // Target refresh time on the same Helsinki calendar day
+            let next = new Date(Date.UTC(
+                helYear,
+                helMonth - 1,
+                helDay,
+                CONFIG.DAILY_REFRESH_HOUR,
+                CONFIG.DAILY_REFRESH_MINUTE,
+                0,
+                0
+            ));
+            
+            // If it's already past the target time today in Helsinki, schedule for tomorrow
+            if (finnish >= next) {
+                next.setUTCDate(next.getUTCDate() + 1);
+            }
+            
+            // Skip weekends (based on Helsinki calendar day)
+            while (next.getUTCDay() === 0 || next.getUTCDay() === 6) {
+                next.setUTCDate(next.getUTCDate() + 1);
+            }
+            
+            const msUntilNext = next.getTime() - finnish.getTime();
+            
+            refreshTimer = setTimeout(async () => {
+                if (stocks.length > 0 && navigator.onLine && apiKey) {
+                    console.log('Daily auto-refresh at 14:00');
+                    await refreshPrices(true); // true = automatic, skip confirmation
+                    await dbSet('lastRefreshDate', new Date().toISOString().split('T')[0]);
+                }
+                scheduleDailyRefresh(); // Schedule next day
+            }, msUntilNext);
         }
         
         // INIT
@@ -1160,15 +1192,38 @@
             render();
             renderStockList();
             
-            if (stocks.length > 0 && navigator.onLine && apiKey) {
-                setTimeout(refreshPrices, 1000);
+            // Check if we need to catch up on today's refresh
+            const lastRefresh = await dbGet('lastRefreshDate');
+            const today = new Date().toISOString().split('T')[0];
+            // Determine weekday and hour in Helsinki time in a timezone-safe way
+            const helsinkiFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Europe/Helsinki',
+                weekday: 'short',
+                hour: 'numeric',
+                hour12: false
+            });
+            const helsinkiParts = helsinkiFormatter.formatToParts(new Date());
+            let helsinkiWeekday = null;
+            let helsinkiHour = null;
+            for (const part of helsinkiParts) {
+                if (part.type === 'weekday') helsinkiWeekday = part.value;
+                if (part.type === 'hour') helsinkiHour = parseInt(part.value, 10);
+            }
+            const isWeekday = helsinkiWeekday !== 'Sat' && helsinkiWeekday !== 'Sun';
+            const isPast14 = helsinkiHour !== null && helsinkiHour >= CONFIG.DAILY_REFRESH_HOUR;
+
+            if (stocks.length > 0 && navigator.onLine && apiKey && lastRefresh !== today && isWeekday && isPast14) {
+                setTimeout(async () => {
+                    await refreshPrices(true);
+                    await dbSet('lastRefreshDate', today);
+                }, 1000);
             }
             
-            startAutoRefresh();
+            scheduleDailyRefresh();
             
             window.addEventListener('online', () => {
                 showStatus('✓ Yhdistetty', 'success');
-                refreshPrices();
+                refreshPrices(true);
             });
             
             window.addEventListener('offline', () => {
