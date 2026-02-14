@@ -35,7 +35,7 @@ export function useDailyRefresh(onRefresh?: () => void) {
       const lastRefreshDate = usePortfolioStore.getState().lastRefreshDate;
 
       if (isWeekday() && hours >= 14 && lastRefreshDate !== today) {
-        performRefresh();
+        void performRefresh();
       }
     }
 
@@ -45,6 +45,8 @@ export function useDailyRefresh(onRefresh?: () => void) {
       timerId = setTimeout(async () => {
         if (cancelled) return;
         await performRefresh();
+        // Check again after async refresh - component could have unmounted during refresh
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!cancelled) {
           schedule();
         }
