@@ -255,28 +255,41 @@ expect(calculatePenalty(null, 100)).toEqual({ penalty: 1800, isMissing: true })
 
 ### Tech Stack
 ```
-[Project Owner: Add your stack here]
-- Framework: Next.js 14+ / React / Vue / etc.
-- Language: TypeScript / Python / Go / etc.
-- Database: PostgreSQL / MongoDB / etc.
-- Hosting: Vercel / AWS / GCP / etc.
+- Framework: React 18+
+- Language: TypeScript (strict mode)
+- Build Tool: Vite
+- Styling: Tailwind CSS
+- State Management: Zustand with persist middleware
+- Storage: IndexedDB via idb-keyval
+- Testing: Vitest
+- Linting: ESLint
+- PWA: vite-plugin-pwa
+- Hosting: GitHub Pages
 ```
 
 ### Code Conventions
 ```
-[Project Owner: Add your conventions here]
-- File naming: kebab-case / camelCase / PascalCase
-- Component structure: [Pattern]
-- State management: [Library/Pattern]
-- Testing framework: [Jest / Vitest / Pytest / etc.]
+- File naming: PascalCase for components (.tsx), camelCase for utils (.ts)
+- Component structure: Functional components with hooks
+- State management: Zustand store in src/store/
+- Custom hooks: src/hooks/ for reusable logic
+- Utilities: src/utils/ for pure functions
+- Testing framework: Vitest
+- Imports: Absolute paths from src/
+- No `any` types - use strict TypeScript
+- Finnish language for UI text
 ```
 
 ### Domain Knowledge
 ```
-[Project Owner: Add domain-specific rules]
-- Business rules: [Critical domain logic]
-- Regulatory requirements: [Compliance needs]
-- Performance targets: [Latency / throughput goals]
+- Business rules: Stock portfolio tracking with Yahoo Finance API
+- API Constraints: 100 requests/month free tier (RapidAPI)
+- Auto-refresh: Once daily at 14:00 Helsinki time (weekdays only)
+- Data Privacy: All data stored locally (IndexedDB), no server storage
+- Multi-portfolio: Users can create/manage multiple portfolios
+- Symbols: Yahoo Finance format (e.g., NOKIA.HE, AAPL, VOLV-B.ST)
+- Number Formatting: Finnish locale (1 234,56 €)
+- Performance: Offline-first PWA with service worker caching
 ```
 
 ---
