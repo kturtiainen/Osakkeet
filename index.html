@@ -916,8 +916,16 @@
         
         function importPortfolio(e) {
             readFile(e, async (data) => {
-                if (data.stocks && Array.isArray(data.stocks)) {
-                    stocks = data.stocks.map(s => ({ ...s, currentPrice: 0 }));
+                // Tukee sekä suoraa array-muotoa [...] että wrapper-muotoa {"stocks": [...]}
+                const stocksArray = Array.isArray(data) ? data : (data?.stocks ?? []);
+                
+                if (Array.isArray(stocksArray) && stocksArray.length > 0) {
+                    stocks = stocksArray.map(s => ({ 
+                        symbol: s.symbol,
+                        shares: s.shares,
+                        purchasePrice: s.purchasePrice,
+                        currentPrice: s.currentPrice ?? 0 
+                    }));
                     await saveStocks();
                     showStatus(`✓ ${stocks.length} osaketta tuotu`, 'success');
                     renderStockList();
