@@ -57,5 +57,5 @@ export function useDailyRefresh(onRefresh?: () => void) {
       cancelled = true;
       clearTimeout(timerId);
     };
-  }, []); // Empty dependency array — runs only once on mount
+  }, []); // Empty dependency array - runs only once on mount
 }
