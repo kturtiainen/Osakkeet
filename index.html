@@ -754,7 +754,7 @@
                 // Process symbols in batches of 30 with 1.5s delay between batches
                 const BATCH_SIZE = 30;
                 const BATCH_DELAY_MS = 1500;
-                const prices = {};
+                const prices = {}; // Accumulate prices from all batches
                 
                 for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
                     const batch = symbols.slice(i, i + BATCH_SIZE);
@@ -790,7 +790,7 @@
                     results.forEach((result) => {
                         if (result.status === 'fulfilled') {
                             const { symbol, price } = result.value;
-                            if (price !== undefined && price !== null && price > 0) {
+                            if (price != null && price > 0) {
                                 prices[symbol] = parseFloat(price);
                             }
                         } else {
@@ -859,7 +859,7 @@
             const price = parseFloat(document.getElementById('priceInput').value);
             
             // Validate symbol: only uppercase letters, digits, dots, colons, hyphens, underscores, max 20 chars
-            if (!symbol || symbol.length > 20 || !/^[A-Z0-9.:_\-]+$/.test(symbol)) {
+            if (!symbol || symbol.length > 20 || !/^[A-Z0-9.:_-]+$/.test(symbol)) {
                 return showStatus('⚠️ Virheellinen symboli', 'error');
             }
             
