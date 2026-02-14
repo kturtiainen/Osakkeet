@@ -646,9 +646,9 @@
         
         // SECURITY: HTML escaping to prevent XSS attacks
         function escapeHtml(text) {
-            if (text === null || text === undefined) return '';
+            if (!text) return '';
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = String(text);
             return div.innerHTML;
         }
         
@@ -998,7 +998,7 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Määrä</span>
-                                <span class="detail-value">${escapeHtml(s.shares)} kpl</span>
+                                <span class="detail-value">${s.shares} kpl</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Arvo</span>
@@ -1032,7 +1032,7 @@
                     <div class="stock-item">
                         <div class="stock-item-info">
                             <strong>${escapeHtml(s.symbol)}</strong>
-                            <small>${escapeHtml(s.shares)} kpl @ ${fmt(s.purchasePrice)}</small>
+                            <small>${s.shares} kpl @ ${fmt(s.purchasePrice)}</small>
                         </div>
                         <button class="delete-btn" onclick="deleteStock(${i})">Poista</button>
                     </div>
