@@ -795,11 +795,11 @@
             }
         }
         
-        async function refreshPrices(isAutomatic = false) {
+        async function refreshPrices(isAutomatic = false, showQuotaPrompt = true) {
             if (stocks.length === 0) return showStatus('Lisää osakkeita ensin', 'error');
             
             // Manual refresh: show confirmation about quota
-            if (!isAutomatic) {
+            if (!isAutomatic && showQuotaPrompt) {
                 if (!confirm('Kuukausittainen raja on 100 pyyntöä.\nHaluatko päivittää nyt?')) return;
             }
             
