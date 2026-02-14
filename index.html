@@ -598,8 +598,8 @@
             
             <!-- API Key -->
             <div class="form-group">
-                <label>🔑 Yahoo Finance API-avain</label>
-                <input type="password" id="apiKeyInput" placeholder="Syötä API-avain">
+                <label>🔑 Finnhub API-avain</label>
+                <input type="password" id="apiKeyInput" placeholder="Syötä Finnhub-avain">
                 <div class="btn-group" style="margin-top: 10px;">
                     <button class="btn btn-secondary btn-small" onclick="saveApiKey()">Tallenna</button>
                     <button class="btn btn-secondary btn-small" onclick="exportApiKey()">💾 Vie</button>
@@ -611,7 +611,7 @@
             <!-- Add Stock -->
             <div class="form-group">
                 <label>➕ Lisää osake</label>
-                <input type="text" id="symbolInput" placeholder="Symboli (esim. NOKIA.HE)" style="margin-bottom: 10px;">
+                <input type="text" id="symbolInput" placeholder="Symboli (esim. AKTIA, FORTUM, NOKIA)" style="margin-bottom: 10px;">
                 <input type="number" id="sharesInput" placeholder="Määrä (kpl)" step="0.01" style="margin-bottom: 10px;">
                 <input type="number" id="priceInput" placeholder="Hankintahinta (€)" step="0.01" style="margin-bottom: 10px;">
                 <button class="btn btn-primary" onclick="addStock()">Lisää osake</button>
@@ -752,8 +752,14 @@
             try {
                 // Finnhub.io has a 60 req/min limit (per-minute, allowing bursts)
                 // Fetch prices in parallel for better performance
-                const pricePromises = symbols.map(async (symbol) => {
-                    const encodedSymbol = encodeURIComponent(symbol);
+                const pricePromises = symbols.map(async (originalSymbol) => {
+                    // Add .HE suffix for Helsinki Stock Exchange symbols if not already present
+                    let apiSymbol = originalSymbol;
+                    if (!originalSymbol.includes(':') && !originalSymbol.endsWith('.HE')) {
+                        apiSymbol = `${originalSymbol}.HE`;
+                    }
+                    
+                    const encodedSymbol = encodeURIComponent(apiSymbol);
                     const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}`;
                     
                     const response = await fetch(url, {
@@ -763,12 +769,13 @@
                         signal: AbortSignal.timeout(15000)
                     });
                     
-                    if (!response.ok) throw new Error(`HTTP ${response.status} for ${symbol}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status} for ${apiSymbol}`);
                     
                     const data = await response.json();
                     
                     // Finnhub API response format: { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
-                    return { symbol, price: data.c };
+                    // Return with original symbol (without .HE suffix) for storage
+                    return { symbol: originalSymbol, price: data.c };
                 });
                 
                 const results = await Promise.all(pricePromises);

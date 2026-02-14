@@ -17,11 +17,13 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ### 3. Lisää osakkeita
 1. Asetuksissa täytä:
-   - **Symboli**: Esim. `HEX:NOKIA` (Helsinki), `AAPL` (USA)
+   - **Symboli**: Esim. `AKTIA`, `FORTUM`, `NOKIA` (Helsingin pörssi) tai `AAPL` (USA)
    - **Määrä**: Osakkeiden lukumäärä
    - **Hankintahinta**: Hinta jonka maksoit per osake
 2. Paina "Lisää osake"
 3. Hinnat päivittyvät automaattisesti
+
+**Huomio:** Sovellus lisää automaattisesti `.HE`-suffixin Helsingin pörssin osakkeille.
 
 ### 4. Käytä sovellusta
 - 🔄 **Päivitä hinnat** - Hae uusimmat hinnat
@@ -64,11 +66,11 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ## 📊 Pörssit
 
-Tuetut symbolit (Finnhub.io muoto):
-- 🇫🇮 **Helsinki**: `HEX:NOKIA`, `HEX:WRT1V`, `HEX:NESTE`
+Tuetut symbolit:
+- 🇫🇮 **Helsinki**: `AKTIA`, `FORTUM`, `NOKIA`, `NESTE` (sovellus lisää automaattisesti `.HE`-suffixin)
 - 🇺🇸 **USA**: `AAPL`, `MSFT`, `GOOGL`, `TSLA`
-- 🇸🇪 **Tukholma**: `STO:VOLV-B`, `STO:ERIC-B`
-- 🇬🇧 **Lontoo**: `LSE:BP`, `LSE:SHEL`
+- 🇸🇪 **Tukholma**: `STO:VOLV-B`, `STO:ERIC-B` (käytä Finnhub-muotoa)
+- 🇬🇧 **Lontoo**: `LSE:BP`, `LSE:SHEL` (käytä Finnhub-muotoa)
 
 Löydät symbolit: [Finnhub.io Stock Symbols](https://finnhub.io/docs/api/stock-symbols)
 
@@ -77,7 +79,7 @@ Löydät symbolit: [Finnhub.io Stock Symbols](https://finnhub.io/docs/api/stock-
 **Hinnat eivät päivity:**
 - Tarkista API-avain asetuksista
 - Varmista että olet online
-- Tarkista että symboli on oikein Finnhub-muodossa (esim. `HEX:NOKIA`, ei `NOKIA.HE`)
+- Tarkista että symboli on oikein (esim. `AKTIA`, `FORTUM` Helsingin pörssille, `AAPL` USA:lle)
 - Huomaa: Finnhub ilmainen taso on rajoitettu 60 pyyntöön/minuutti
 
 **Sovellus ei toimi:**
