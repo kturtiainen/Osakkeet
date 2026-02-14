@@ -1195,9 +1195,22 @@
             // Check if we need to catch up on today's refresh
             const lastRefresh = await dbGet('lastRefreshDate');
             const today = new Date().toISOString().split('T')[0];
-            const finnish = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Helsinki' }));
-            const isWeekday = finnish.getDay() !== 0 && finnish.getDay() !== 6;
-            const isPast14 = finnish.getHours() >= CONFIG.DAILY_REFRESH_HOUR;
+            // Determine weekday and hour in Helsinki time in a timezone-safe way
+            const helsinkiFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Europe/Helsinki',
+                weekday: 'short',
+                hour: 'numeric',
+                hour12: false
+            });
+            const helsinkiParts = helsinkiFormatter.formatToParts(new Date());
+            let helsinkiWeekday = null;
+            let helsinkiHour = null;
+            for (const part of helsinkiParts) {
+                if (part.type === 'weekday') helsinkiWeekday = part.value;
+                if (part.type === 'hour') helsinkiHour = parseInt(part.value, 10);
+            }
+            const isWeekday = helsinkiWeekday !== 'Sat' && helsinkiWeekday !== 'Sun';
+            const isPast14 = helsinkiHour !== null && helsinkiHour >= CONFIG.DAILY_REFRESH_HOUR;
 
             if (stocks.length > 0 && navigator.onLine && apiKey && lastRefresh !== today && isWeekday && isPast14) {
                 setTimeout(async () => {
