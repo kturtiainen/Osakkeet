@@ -1,105 +1,175 @@
 # 📊 Osakesalkku
 
-Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
+Modern, iPad-optimized stock portfolio tracking app with real-time prices and multi-portfolio support.
 
-## 🚀 Käyttö
+## 🚀 Features
 
-### 1. Avaa sovellus
-**GitHub Pages:** [https://kturtiainen.github.io/Osakkeet/](https://kturtiainen.github.io/Osakkeet/)
+- 📊 **Multiple Portfolios** - Create and manage multiple portfolios with tabs
+- 💰 **Real-time Prices** - Yahoo Finance data via RapidAPI
+- 📱 **Progressive Web App** - Install on iOS/Android, works offline
+- 🌙 **Dark Theme** - Beautiful dark UI with purple/pink gradients
+- 🔄 **Auto-refresh** - Daily automatic price updates at 14:00 (weekdays)
+- 💾 **Import/Export** - Backup and restore your portfolios
+- 🔒 **Privacy-first** - All data stored locally on your device
 
-### 2. Aseta API-avain
-1. Paina ⚙️-kuvaketta (asetukset)
-2. Hanki ilmainen API-avain: [RapidAPI Yahoo Finance](https://rapidapi.com/sparior/api/yahoo-finance15)
-3. Syötä avain ja paina "Tallenna"
-4. Voit viedä avaimen tiedostoon varmuuskopiota varten
+## 🎯 Quick Start
 
-**Huomio:** API-avain on turvallista säilyttää selaimen lokaalisessa muistissa. Ilmainen taso on rajoitettu 100 pyyntöön/kuukausi.
+### 1. Open the App
+**Live Demo:** [https://kturtiainen.github.io/Osakkeet/](https://kturtiainen.github.io/Osakkeet/)
 
-### 3. Lisää osakkeita
-1. Asetuksissa täytä:
-   - **Symboli**: Esim. `NOKIA.HE`, `AAPL`, `VOLV-B.ST` (Yahoo Finance -muodossa)
-   - **Määrä**: Osakkeiden lukumäärä
-   - **Hankintahinta**: Hinta jonka maksoit per osake
-2. Paina "Lisää osake"
-3. Hinnat päivittyvät automaattisesti
+### 2. Get API Key
+1. Click ⚙️ (Settings)
+2. Get free API key: [RapidAPI Yahoo Finance](https://rapidapi.com/sparior/api/yahoo-finance15)
+3. Enter key and save
 
-### 4. Käytä sovellusta
-- 🔄 **Päivitä hinnat** - Hae uusimmat hinnat (vahvistus vaaditaan)
-- ⚙️ **Asetukset** - Hallinnoi osakkeita ja API-avainta
-- **Automaattinen päivitys** - Hinnat päivittyvät automaattisesti kerran päivässä klo 14:00 (ma-pe)
-- **Offline-tuki** - Toimii ilman nettiä (näyttää välimuistin hinnat)
+**Note:** Free tier limited to 100 requests/month. App auto-refreshes once daily.
 
-## 📱 Asennus iPadille/iPhonelle
+### 3. Add Stocks
+1. In Settings, add stocks:
+   - **Symbol**: e.g., `NOKIA.HE`, `AAPL`, `VOLV-B.ST`
+   - **Shares**: Number of shares owned
+   - **Purchase Price**: Price paid per share
+2. Click "Lisää osake" (Add stock)
+3. Prices update automatically
 
-### Safari:
-1. Avaa [https://kturtiainen.github.io/Osakkeet/](https://kturtiainen.github.io/Osakkeet/)
-2. Paina **Share**-nappia (neliö nuolella)
-3. Valitse **"Add to Home Screen"**
-4. Sovellus toimii nyt kuin natiiviapp!
+### 4. Create Multiple Portfolios
+- Click "+ Uusi salkku" to create new portfolios
+- Switch between portfolios using tabs
+- Rename or delete portfolios (hover over tab)
 
-## 💾 Varmuuskopiot
+## 📱 Install as App
 
-### Vie salkku
-1. Asetukset → "💾 Vie salkku"
-2. JSON-tiedosto tallentuu laitteellesi
+### iOS (Safari):
+1. Open [app URL](https://kturtiainen.github.io/Osakkeet/)
+2. Tap Share button
+3. Select "Add to Home Screen"
+4. App works like native app!
 
-### Tuo salkku
-1. Asetukset → "📂 Tuo salkku"
-2. Valitse aiemmin tallennettu JSON-tiedosto
+### Android (Chrome):
+1. Open app URL
+2. Tap menu (⋮)
+3. Select "Install app" or "Add to Home screen"
 
-## 🔧 Teknologia
+## 🔧 Tech Stack
 
-- **Frontend**: Pure HTML/CSS/JavaScript (ei riippuvuuksia)
-- **Tallennus**: IndexedDB (fallback: localStorage)
-- **API**: Yahoo Finance via RapidAPI (ilmainen, 100 pyyntöä/kuukausi)
-- **PWA**: Service Worker + Manifest
-- **Hosting**: GitHub Pages (ilmainen)
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | React 18+ |
+| **Language** | TypeScript (strict mode) |
+| **Build** | Vite |
+| **Styling** | Tailwind CSS |
+| **State** | Zustand with persist middleware |
+| **Storage** | IndexedDB via idb-keyval |
+| **PWA** | vite-plugin-pwa |
+| **Testing** | Vitest |
+| **Linting** | ESLint |
+| **Hosting** | GitHub Pages |
 
-## 🔒 Tietoturva
+## 💻 Development
 
-- ✅ Kaikki data tallennetaan **vain laitteellesi** (IndexedDB)
-- ✅ API-avain tallennetaan **vain laitteellesi**
-- ✅ Ei palvelinpuolen tallennusta
-- ✅ GitHub Pages on julkinen, mutta **sinun datasi on yksityinen**
+### Prerequisites
+- Node.js 20+
+- npm
 
-## 📊 Pörssit
+### Setup
+```bash
+# Clone repository
+git clone https://github.com/kturtiainen/Osakkeet.git
+cd Osakkeet
 
-Tuetut symbolit (Yahoo Finance -muodossa):
-- 🇫🇮 **Helsinki**: `NOKIA.HE`, `FORTUM.HE`, `NESTE.HE`, `AKTIA.HE`
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+
+# Type check
+npm run type-check
+```
+
+### Project Structure
+```
+/Osakkeet/
+├── src/
+│   ├── components/      # React components
+│   ├── hooks/           # Custom React hooks
+│   ├── store/           # Zustand store
+│   ├── services/        # API services
+│   ├── types/           # TypeScript types
+│   ├── utils/           # Utility functions
+│   └── tests/           # Unit tests
+├── public/              # Static assets
+└── archive/             # Old single-file app
+```
+
+## 🔒 Security & Privacy
+
+- ✅ All data stored **locally** on your device (IndexedDB)
+- ✅ API key stored **only on your device**
+- ✅ No server-side storage
+- ✅ No tracking or analytics
+- ✅ XSS prevention via React's built-in escaping
+- ✅ Input validation for all user data
+
+## 📊 Supported Exchanges
+
+Stock symbols in Yahoo Finance format:
+- 🇫🇮 **Helsinki**: `NOKIA.HE`, `FORTUM.HE`, `NESTE.HE`
 - 🇺🇸 **USA**: `AAPL`, `MSFT`, `GOOGL`, `TSLA`
-- 🇸🇪 **Tukholma**: `VOLV-B.ST`, `ERIC-B.ST`
-- 🇬🇧 **Lontoo**: `BP.L`, `SHEL.L`
+- 🇸🇪 **Stockholm**: `VOLV-B.ST`, `ERIC-B.ST`
+- 🇬🇧 **London**: `BP.L`, `SHEL.L`
 
-Löydät symbolit: [Yahoo Finance](https://finance.yahoo.com/)
+Find symbols at [Yahoo Finance](https://finance.yahoo.com/)
 
-## 🐛 Ongelmanratkaisu
+## 💾 Backup & Restore
 
-**Hinnat eivät päivity:**
-- Tarkista API-avain asetuksista
-- Varmista että olet online
-- Tarkista että symboli on oikein Yahoo Finance -muodossa (esim. `NOKIA.HE`, `AAPL`)
-- Huomaa: Ilmainen taso on rajoitettu 100 pyyntöön/kuukausi
-- Automaattinen päivitys tapahtuu kerran päivässä klo 14:00 (ma-pe)
+### Export Portfolio
+1. Settings → "💾 Vie salkku"
+2. JSON file downloads to your device
 
-**Sovellus ei toimi:**
-- Tyhjennä selaimen välimuisti
-- Päivitä sivu (F5 tai ⌘+R)
-- Varmista että käytät modernia selainta
+### Import Portfolio
+1. Settings → "📂 Tuo salkku"
+2. Select previously saved JSON file
 
-**Data katosi:**
-- iOS voi tyhjentää IndexedDB:n jos tila loppuu
-- **Vie salkku säännöllisesti varmuuskopioksi!**
+**Important:** Export regularly! iOS may clear app data if device storage is low.
 
-## 📄 Lisenssi
+## 🐛 Troubleshooting
 
-MIT License - Vapaa käyttöön
+**Prices not updating:**
+- Check API key in settings
+- Verify internet connection
+- Ensure symbol is correct Yahoo Finance format
+- Free tier: 100 requests/month limit
+- Auto-refresh runs once daily at 14:00 (weekdays)
 
-## 🤝 Kehitys
+**App not working:**
+- Clear browser cache
+- Refresh page (F5 or ⌘+R)
+- Use modern browser (Chrome, Safari, Firefox, Edge)
 
-Pull requestit tervetulleita! 
+**Lost data:**
+- iOS may clear IndexedDB if storage low
+- **Export portfolios regularly!**
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) file
+
+## 🤝 Contributing
+
+Pull requests welcome! Please follow the coding standards in [CLAUDE.md](CLAUDE.md).
 
 ---
 
-**Kehittäjä:** Kape Turtiainen  
-**Versio:** 1.0.0  
-**Päivitetty:** 2026-02-14
+**Developer:** Kape Turtiainen  
+**Version:** 2.0.0  
+**Updated:** 2026-02-14
