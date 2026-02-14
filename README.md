@@ -13,7 +13,7 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 3. Syötä avain ja paina "Tallenna"
 4. Voit viedä avaimen tiedostoon varmuuskopiota varten
 
-**Huomio:** Finnhub API-avain on turvallista säilyttää selaimen lokaalissa, sillä ilmainen avain on rajoitettu (60 pyyntöä/minuutti) eikä mahdollista väärinkäyttöä.
+**Huomio:** Finnhub API-avain on turvallista säilyttää selaimen lokaalisessa muistissa, sillä ilmainen avain on rajoitettu (60 pyyntöä/minuutti) eikä mahdollista väärinkäyttöä.
 
 ### 3. Lisää osakkeita
 1. Asetuksissa täytä:

@@ -640,7 +640,6 @@
         // CONFIG
         const CONFIG = {
             API_BASE: 'https://finnhub.io/api/v1',
-            API_KEY_PARAM: 'token',
             CACHE_DURATION: 5 * 60 * 1000,
             AUTO_REFRESH: 5 * 60 * 1000,
         };
@@ -751,12 +750,16 @@
             }
             
             try {
-                // Finnhub.io has a 60 req/min limit, fetch prices in parallel
+                // Finnhub.io has a 60 req/min limit (per-minute, allowing bursts)
+                // Fetch prices in parallel for better performance
                 const pricePromises = symbols.map(async (symbol) => {
                     const encodedSymbol = encodeURIComponent(symbol);
-                    const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}&${CONFIG.API_KEY_PARAM}=${apiKey}`;
+                    const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}`;
                     
                     const response = await fetch(url, {
+                        headers: {
+                            'X-Finnhub-Token': apiKey
+                        },
                         signal: AbortSignal.timeout(15000)
                     });
                     
