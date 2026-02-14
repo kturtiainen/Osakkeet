@@ -35,7 +35,7 @@ self.addEventListener('fetch', event => {
   // Use URL parsing to properly check the hostname
   try {
     const url = new URL(event.request.url);
-    if (url.hostname === 'finnhub.io') {
+    if (url.hostname.includes('rapidapi.com')) {
       return event.respondWith(fetch(event.request));
     }
   } catch (e) {

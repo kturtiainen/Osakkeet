@@ -9,26 +9,24 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ### 2. Aseta API-avain
 1. Paina ⚙️-kuvaketta (asetukset)
-2. Hanki ilmainen API-avain: [Finnhub.io](https://finnhub.io/register)
+2. Hanki ilmainen API-avain: [RapidAPI Yahoo Finance](https://rapidapi.com/sparior/api/yahoo-finance15)
 3. Syötä avain ja paina "Tallenna"
 4. Voit viedä avaimen tiedostoon varmuuskopiota varten
 
-**Huomio:** Finnhub API-avain on turvallista säilyttää selaimen lokaalisessa muistissa, sillä ilmainen avain on rajoitettu (60 pyyntöä/minuutti) eikä mahdollista väärinkäyttöä.
+**Huomio:** API-avain on turvallista säilyttää selaimen lokaalisessa muistissa. Ilmainen taso on rajoitettu 100 pyyntöön/kuukausi.
 
 ### 3. Lisää osakkeita
 1. Asetuksissa täytä:
-   - **Symboli**: Esim. `AKTIA`, `FORTUM`, `NOKIA` (Helsingin pörssi) tai `AAPL` (USA)
+   - **Symboli**: Esim. `NOKIA.HE`, `AAPL`, `VOLV-B.ST` (Yahoo Finance -muodossa)
    - **Määrä**: Osakkeiden lukumäärä
    - **Hankintahinta**: Hinta jonka maksoit per osake
 2. Paina "Lisää osake"
 3. Hinnat päivittyvät automaattisesti
 
-**Huomio:** Sovellus lisää automaattisesti `.HE`-suffixin Helsingin pörssin osakkeille.
-
 ### 4. Käytä sovellusta
-- 🔄 **Päivitä hinnat** - Hae uusimmat hinnat
+- 🔄 **Päivitä hinnat** - Hae uusimmat hinnat (vahvistus vaaditaan)
 - ⚙️ **Asetukset** - Hallinnoi osakkeita ja API-avainta
-- **Automaattinen päivitys** - Hinnat päivittyvät 5 min välein
+- **Automaattinen päivitys** - Hinnat päivittyvät automaattisesti kerran päivässä klo 14:00 (ma-pe)
 - **Offline-tuki** - Toimii ilman nettiä (näyttää välimuistin hinnat)
 
 ## 📱 Asennus iPadille/iPhonelle
@@ -53,7 +51,7 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 - **Frontend**: Pure HTML/CSS/JavaScript (ei riippuvuuksia)
 - **Tallennus**: IndexedDB (fallback: localStorage)
-- **API**: Finnhub.io (ilmainen, 60 pyyntöä/minuutti)
+- **API**: Yahoo Finance via RapidAPI (ilmainen, 100 pyyntöä/kuukausi)
 - **PWA**: Service Worker + Manifest
 - **Hosting**: GitHub Pages (ilmainen)
 
@@ -66,21 +64,22 @@ Moderni, iPad-optimoitu osakesalkun seurantasovellus reaaliaikaisilla hinnoilla.
 
 ## 📊 Pörssit
 
-Tuetut symbolit:
-- 🇫🇮 **Helsinki**: `AKTIA`, `FORTUM`, `NOKIA`, `NESTE` (sovellus lisää automaattisesti `.HE`-suffixin)
+Tuetut symbolit (Yahoo Finance -muodossa):
+- 🇫🇮 **Helsinki**: `NOKIA.HE`, `FORTUM.HE`, `NESTE.HE`, `AKTIA.HE`
 - 🇺🇸 **USA**: `AAPL`, `MSFT`, `GOOGL`, `TSLA`
-- 🇸🇪 **Tukholma**: `STO:VOLV-B`, `STO:ERIC-B` (käytä Finnhub-muotoa)
-- 🇬🇧 **Lontoo**: `LSE:BP`, `LSE:SHEL` (käytä Finnhub-muotoa)
+- 🇸🇪 **Tukholma**: `VOLV-B.ST`, `ERIC-B.ST`
+- 🇬🇧 **Lontoo**: `BP.L`, `SHEL.L`
 
-Löydät symbolit: [Finnhub.io Stock Symbols](https://finnhub.io/docs/api/stock-symbols)
+Löydät symbolit: [Yahoo Finance](https://finance.yahoo.com/)
 
 ## 🐛 Ongelmanratkaisu
 
 **Hinnat eivät päivity:**
 - Tarkista API-avain asetuksista
 - Varmista että olet online
-- Tarkista että symboli on oikein (esim. `AKTIA`, `FORTUM` Helsingin pörssille, `AAPL` USA:lle)
-- Huomaa: Finnhub ilmainen taso on rajoitettu 60 pyyntöön/minuutti
+- Tarkista että symboli on oikein Yahoo Finance -muodossa (esim. `NOKIA.HE`, `AAPL`)
+- Huomaa: Ilmainen taso on rajoitettu 100 pyyntöön/kuukausi
+- Automaattinen päivitys tapahtuu kerran päivässä klo 14:00 (ma-pe)
 
 **Sovellus ei toimi:**
 - Tyhjennä selaimen välimuisti
