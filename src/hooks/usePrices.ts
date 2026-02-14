@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { fetchQuotes } from '../services/yahooFinanceApi';
 import { getHelsinkiDate } from '../utils/timezone';
@@ -7,20 +7,24 @@ export function usePrices() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const portfolios = usePortfolioStore((state) => state.portfolios);
-  const apiKey = usePortfolioStore((state) => state.apiKey);
+  const isRefreshingRef = useRef(false);
+
   const updatePrices = usePortfolioStore((state) => state.updatePrices);
   const setPriceCache = usePortfolioStore((state) => state.setPriceCache);
   const setLastRefreshDate = usePortfolioStore((state) => state.setLastRefreshDate);
-  const priceCache = usePortfolioStore((state) => state.priceCache);
 
   const refreshPrices = useCallback(async (): Promise<boolean> => {
+    if (isRefreshingRef.current) return false;
+    isRefreshingRef.current = true;
+
+    const { apiKey, portfolios, priceCache } = usePortfolioStore.getState();
+
     if (!apiKey) {
       setError('API-avain puuttuu');
+      isRefreshingRef.current = false;
       return false;
     }
 
-    // Collect all unique symbols from all portfolios
     const allSymbols = new Set<string>();
     portfolios.forEach((portfolio) => {
       portfolio.stocks.forEach((stock) => {
@@ -29,7 +33,8 @@ export function usePrices() {
     });
 
     if (allSymbols.size === 0) {
-      return true; // No stocks to fetch
+      isRefreshingRef.current = false;
+      return true;
     }
 
     setIsLoading(true);
@@ -37,34 +42,22 @@ export function usePrices() {
 
     try {
       const prices = await fetchQuotes(Array.from(allSymbols), apiKey);
-      
-      // Update store with new prices
       updatePrices(prices);
-      
-      // Update cache
-      setPriceCache({
-        data: prices,
-        timestamp: Date.now(),
-      });
-      
-      // Update last refresh date
+      setPriceCache({ data: prices, timestamp: Date.now() });
       setLastRefreshDate(getHelsinkiDate());
-      
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Tuntematon virhe';
       setError(errorMessage);
-      
-      // If we have cached prices, use those as fallback
       if (priceCache) {
         updatePrices(priceCache.data);
       }
-      
       return false;
     } finally {
       setIsLoading(false);
+      isRefreshingRef.current = false;
     }
-  }, [apiKey, portfolios, updatePrices, setPriceCache, setLastRefreshDate, priceCache]);
+  }, [updatePrices, setPriceCache, setLastRefreshDate]);
 
   return {
     isLoading,

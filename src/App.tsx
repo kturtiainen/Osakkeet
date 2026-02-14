@@ -15,8 +15,9 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const portfolios = usePortfolioStore((state) => state.portfolios);
   const activePortfolioId = usePortfolioStore((state) => state.activePortfolioId);
-  const apiKey = usePortfolioStore((state) => state.apiKey);
-  const priceCache = usePortfolioStore((state) => state.priceCache);
+  // Use minimal selectors to reduce re-renders
+  const hasApiKey = usePortfolioStore((state) => !!state.apiKey);
+  const lastUpdateTimestamp = usePortfolioStore((state) => state.priceCache?.timestamp);
 
   const { isLoading, refreshPrices } = usePrices();
   const { messages, showSuccess, showError, showWarning, removeMessage } = useStatus();
@@ -37,7 +38,7 @@ function App() {
   );
 
   const handleRefresh = async () => {
-    if (!apiKey) {
+    if (!hasApiKey) {
       showWarning('Aseta API-avain ensin asetuksista');
       setIsSettingsOpen(true);
       return;
@@ -64,8 +65,8 @@ function App() {
       <StatusBar messages={messages} onDismiss={removeMessage} />
       
       <Header
-        isApiConnected={!!apiKey}
-        lastUpdateTimestamp={priceCache?.timestamp}
+        isApiConnected={hasApiKey}
+        lastUpdateTimestamp={lastUpdateTimestamp}
       />
 
       <PortfolioTabs />

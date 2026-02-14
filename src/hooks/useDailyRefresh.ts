@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { usePrices } from './usePrices';
 import { getHelsinkiDate, isWeekday, msUntilNextRefresh, getHelsinkiTime } from '../utils/timezone';
@@ -7,43 +7,55 @@ import { getHelsinkiDate, isWeekday, msUntilNextRefresh, getHelsinkiTime } from 
  * Hook for automatic daily price refresh at 14:00 Helsinki time (weekdays only)
  */
 export function useDailyRefresh(onRefresh?: () => void) {
-  const lastRefreshDate = usePortfolioStore((state) => state.lastRefreshDate);
   const { refreshPrices } = usePrices();
+  const onRefreshRef = useRef(onRefresh);
+  const refreshPricesRef = useRef(refreshPrices);
+  const hasCheckedTodayRef = useRef(false);
 
-  const performRefresh = useCallback(async () => {
-    const success = await refreshPrices();
-    if (success && onRefresh) {
-      onRefresh();
-    }
-  }, [refreshPrices, onRefresh]);
-
-  const scheduleNextRefresh = useCallback(() => {
-    const ms = msUntilNextRefresh();
-    
-    const timerId = setTimeout(() => {
-      performRefresh();
-      // Schedule the next one after this completes
-      scheduleNextRefresh();
-    }, ms);
-
-    return timerId;
-  }, [performRefresh]);
+  // Update refs on every render (no re-triggers)
+  onRefreshRef.current = onRefresh;
+  refreshPricesRef.current = refreshPrices;
 
   useEffect(() => {
-    // Check if we should refresh now
-    const today = getHelsinkiDate();
-    const { hours } = getHelsinkiTime();
-    
-    // If it's a weekday, past 14:00, and we haven't refreshed today yet
-    if (isWeekday() && hours >= 14 && lastRefreshDate !== today) {
-      performRefresh();
+    let timerId: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
+    const performRefresh = async () => {
+      const success = await refreshPricesRef.current();
+      if (success && onRefreshRef.current) {
+        onRefreshRef.current();
+      }
+    };
+
+    // Check catch-up ONLY once on mount
+    if (!hasCheckedTodayRef.current) {
+      hasCheckedTodayRef.current = true;
+      const today = getHelsinkiDate();
+      const { hours } = getHelsinkiTime();
+      const lastRefreshDate = usePortfolioStore.getState().lastRefreshDate;
+
+      if (isWeekday() && hours >= 14 && lastRefreshDate !== today) {
+        performRefresh();
+      }
     }
 
-    // Schedule next automatic refresh
-    const timerId = scheduleNextRefresh();
+    // Schedule next refresh
+    const schedule = () => {
+      const ms = msUntilNextRefresh();
+      timerId = setTimeout(async () => {
+        if (cancelled) return;
+        await performRefresh();
+        if (!cancelled) {
+          schedule();
+        }
+      }, ms);
+    };
+
+    schedule();
 
     return () => {
+      cancelled = true;
       clearTimeout(timerId);
     };
-  }, [lastRefreshDate, performRefresh, scheduleNextRefresh]);
+  }, []); // Empty dependency array — runs only once on mount
 }
