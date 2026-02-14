@@ -917,7 +917,7 @@
         function importPortfolio(e) {
             readFile(e, async (data) => {
                 // Tukee sekä suoraa array-muotoa [...] että wrapper-muotoa {"stocks": [...]}
-                const stocksArray = Array.isArray(data) ? data : (data?.stocks || []);
+                const stocksArray = Array.isArray(data) ? data : (data?.stocks ?? []);
                 
                 if (Array.isArray(stocksArray) && stocksArray.length > 0) {
                     stocks = stocksArray.map(s => ({ 
