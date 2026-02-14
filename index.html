@@ -3,41 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Portfolio Application</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Stock Portfolio</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .stock {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .stock:last-child {
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>My Stock Portfolio</h1>
-        </header>
-        <main>
-            <h2>Stock Holdings</h2>
-            <table id="portfolio">
-                <thead>
-                    <tr>
-                        <th>Stock</th>
-                        <th>Quantity</th>
-                        <th>Purchase Price</th>
-                        <th>Current Price</th>
-                        <th>Total Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Stock entries will be dynamically added here -->
-                </tbody>
-            </table>
-            <form id="addStockForm">
-                <input type="text" id="stockName" placeholder="Stock Name" required>
-                <input type="number" id="quantity" placeholder="Quantity" required>
-                <input type="number" id="purchasePrice" placeholder="Purchase Price" required>
-                <button type="submit">Add Stock</button>
-            </form>
-        </main>
-        <footer>
-            <p>&copy; 2026 Stock Portfolio Application</p>
-        </footer>
+        <h1>My Stock Portfolio</h1>
+        <div id="portfolio"></div>
+        <button id="refresh">Refresh</button>
     </div>
-    <script src="script.js"></script>
+    <script>
+        const API_URL = 'https://finance.yahoo.com/api';
+        const stocks = ['AAPL', 'GOOGL', 'MSFT'];
+
+        document.getElementById('refresh').onclick = function() {
+            fetchPortfolio();
+        };
+
+        async function fetchPortfolio() {
+            const portfolio = document.getElementById('portfolio');
+            portfolio.innerHTML = '';
+            for (const stock of stocks) {
+                const response = await fetch(`${API_URL}/quote/${stock}`);
+                const data = await response.json();
+                const stockDiv = document.createElement('div');
+                stockDiv.className = 'stock';
+                stockDiv.innerHTML = `<strong>${data.symbol}</strong>: $${data.price}`;
+                portfolio.appendChild(stockDiv);
+                saveToIndexedDB(stock, data);
+            }
+        }
+
+        function saveToIndexedDB(stock, data) {
+            const request = indexedDB.open('StockDB', 1);
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                db.createObjectStore('stocks', { keyPath: 'symbol' });
+            };
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(['stocks'], 'readwrite');
+                const store = transaction.objectStore('stocks');
+                store.put({ symbol: stock, price: data.price });
+            };
+        }
+
+        fetchPortfolio();
+    </script>
 </body>
 </html>
