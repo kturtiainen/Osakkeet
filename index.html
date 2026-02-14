@@ -1124,20 +1124,52 @@
             if (refreshTimer) clearTimeout(refreshTimer);
             
             const now = new Date();
-            // Use Finnish timezone
-            const finnish = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Helsinki' }));
+            // Use Finnish (Europe/Helsinki) timezone in a timezone-safe way
+            const helsinkiFormatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Europe/Helsinki',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const helsinkiParts = helsinkiFormatter.formatToParts(now).reduce((acc, part) => {
+                if (part.type !== 'literal') {
+                    acc[part.type] = part.value;
+                }
+                return acc;
+            }, {});
+            const helYear = Number(helsinkiParts.year);
+            const helMonth = Number(helsinkiParts.month);
+            const helDay = Number(helsinkiParts.day);
+            const helHour = Number(helsinkiParts.hour);
+            const helMinute = Number(helsinkiParts.minute);
+            const helSecond = Number(helsinkiParts.second);
             
-            let next = new Date(finnish);
-            next.setHours(CONFIG.DAILY_REFRESH_HOUR, CONFIG.DAILY_REFRESH_MINUTE, 0, 0);
+            // Date representing the current instant, using Helsinki wall-clock time encoded in UTC
+            const finnish = new Date(Date.UTC(helYear, helMonth - 1, helDay, helHour, helMinute, helSecond));
             
-            // If it's already past 14:00 today, schedule for tomorrow
+            // Target refresh time on the same Helsinki calendar day
+            let next = new Date(Date.UTC(
+                helYear,
+                helMonth - 1,
+                helDay,
+                CONFIG.DAILY_REFRESH_HOUR,
+                CONFIG.DAILY_REFRESH_MINUTE,
+                0,
+                0
+            ));
+            
+            // If it's already past the target time today in Helsinki, schedule for tomorrow
             if (finnish >= next) {
-                next.setDate(next.getDate() + 1);
+                next.setUTCDate(next.getUTCDate() + 1);
             }
             
-            // Skip weekends
-            while (next.getDay() === 0 || next.getDay() === 6) {
-                next.setDate(next.getDate() + 1);
+            // Skip weekends (based on Helsinki calendar day)
+            while (next.getUTCDay() === 0 || next.getUTCDay() === 6) {
+                next.setUTCDate(next.getUTCDate() + 1);
             }
             
             const msUntilNext = next.getTime() - finnish.getTime();
