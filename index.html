@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Portfolio Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>My Stock Portfolio</h1>
+        </header>
+        <main>
+            <h2>Stock Holdings</h2>
+            <table id="portfolio">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Purchase Price</th>
+                        <th>Current Price</th>
+                        <th>Total Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Stock entries will be dynamically added here -->
+                </tbody>
+            </table>
+            <form id="addStockForm">
+                <input type="text" id="stockName" placeholder="Stock Name" required>
+                <input type="number" id="quantity" placeholder="Quantity" required>
+                <input type="number" id="purchasePrice" placeholder="Purchase Price" required>
+                <button type="submit">Add Stock</button>
+            </form>
+        </main>
+        <footer>
+            <p>&copy; 2026 Stock Portfolio Application</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
