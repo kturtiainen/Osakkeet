@@ -35,7 +35,8 @@ self.addEventListener('fetch', event => {
   // Use URL parsing to properly check the hostname
   try {
     const url = new URL(event.request.url);
-    if (url.hostname.includes('rapidapi.com')) {
+    // Check for exact match or subdomain of rapidapi.com
+    if (url.hostname === 'rapidapi.com' || url.hostname.endsWith('.rapidapi.com')) {
       return event.respondWith(fetch(event.request));
     }
   } catch (e) {
