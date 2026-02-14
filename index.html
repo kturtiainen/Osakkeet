@@ -750,42 +750,59 @@
             }
             
             try {
-                // Finnhub.io has a 60 req/min limit (per-minute, allowing bursts)
-                // Fetch prices in parallel for better performance
-                const pricePromises = symbols.map(async (originalSymbol) => {
-                    // Add .HE suffix for Helsinki Stock Exchange symbols if not already present
-                    let apiSymbol = originalSymbol;
-                    if (!originalSymbol.includes(':') && !originalSymbol.endsWith('.HE')) {
-                        apiSymbol = `${originalSymbol}.HE`;
-                    }
+                // Finnhub.io has a 60 req/min limit
+                // Process symbols in batches of 30 with 1.5s delay between batches
+                const BATCH_SIZE = 30;
+                const BATCH_DELAY_MS = 1500;
+                const prices = {}; // Accumulate prices from all batches
+                
+                for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
+                    const batch = symbols.slice(i, i + BATCH_SIZE);
                     
-                    const encodedSymbol = encodeURIComponent(apiSymbol);
-                    const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}`;
-                    
-                    const response = await fetch(url, {
-                        headers: {
-                            'X-Finnhub-Token': apiKey
-                        },
-                        signal: AbortSignal.timeout(15000)
+                    const pricePromises = batch.map(async (originalSymbol) => {
+                        // Add .HE suffix for Helsinki Stock Exchange symbols if not already present
+                        let apiSymbol = originalSymbol;
+                        if (!originalSymbol.includes(':') && !originalSymbol.endsWith('.HE')) {
+                            apiSymbol = `${originalSymbol}.HE`;
+                        }
+                        
+                        const encodedSymbol = encodeURIComponent(apiSymbol);
+                        const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}`;
+                        
+                        const response = await fetch(url, {
+                            headers: {
+                                'X-Finnhub-Token': apiKey
+                            },
+                            signal: AbortSignal.timeout(15000)
+                        });
+                        
+                        if (!response.ok) throw new Error(`HTTP ${response.status} for ${apiSymbol}`);
+                        
+                        const data = await response.json();
+                        
+                        // Finnhub API response format: { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
+                        // Return with original symbol (without .HE suffix) for storage
+                        return { symbol: originalSymbol, price: data.c };
                     });
                     
-                    if (!response.ok) throw new Error(`HTTP ${response.status} for ${apiSymbol}`);
+                    const results = await Promise.allSettled(pricePromises);
                     
-                    const data = await response.json();
+                    results.forEach((result) => {
+                        if (result.status === 'fulfilled') {
+                            const { symbol, price } = result.value;
+                            if (price != null && price > 0) {
+                                prices[symbol] = parseFloat(price);
+                            }
+                        } else {
+                            console.error('Failed to fetch price:', result.reason);
+                        }
+                    });
                     
-                    // Finnhub API response format: { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
-                    // Return with original symbol (without .HE suffix) for storage
-                    return { symbol: originalSymbol, price: data.c };
-                });
-                
-                const results = await Promise.all(pricePromises);
-                const prices = {};
-                
-                results.forEach(({ symbol, price }) => {
-                    if (price !== undefined && price !== null && price > 0) {
-                        prices[symbol] = parseFloat(price);
+                    // Add delay between batches (except after the last batch)
+                    if (i + BATCH_SIZE < symbols.length) {
+                        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
                     }
-                });
+                }
                 
                 await dbSet('priceCache', { data: prices, time: Date.now() });
                 updateApiStatus(true);
@@ -841,8 +858,19 @@
             const shares = parseFloat(document.getElementById('sharesInput').value);
             const price = parseFloat(document.getElementById('priceInput').value);
             
-            if (!symbol || !shares || !price) {
-                return showStatus('⚠️ Täytä kaikki kentät', 'error');
+            // Validate symbol: only uppercase letters, digits, dots, colons, hyphens, underscores, max 20 chars
+            if (!symbol || symbol.length > 20 || !/^[A-Z0-9.:_-]+$/.test(symbol)) {
+                return showStatus('⚠️ Virheellinen symboli', 'error');
+            }
+            
+            // Validate shares: must be a positive number
+            if (isNaN(shares) || shares <= 0) {
+                return showStatus('⚠️ Määrän pitää olla positiivinen luku', 'error');
+            }
+            
+            // Validate price: must be a positive number
+            if (isNaN(price) || price <= 0) {
+                return showStatus('⚠️ Hinnan pitää olla positiivinen luku', 'error');
             }
             
             const idx = stocks.findIndex(s => s.symbol === symbol);
