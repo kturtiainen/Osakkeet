@@ -639,7 +639,8 @@
     <script>
         // CONFIG
         const CONFIG = {
-            API_HOST: 'yahoo-finance15.p.rapidapi.com',
+            API_BASE: 'https://finnhub.io/api/v1',
+            API_KEY_PARAM: 'token',
             CACHE_DURATION: 5 * 60 * 1000,
             AUTO_REFRESH: 5 * 60 * 1000,
         };
@@ -750,30 +751,31 @@
             }
             
             try {
-                const ticker = symbols.join(',');
-                const response = await fetch(
-                    `https://${CONFIG.API_HOST}/api/v1/markets/stock/quotes?ticker=${ticker}`,
-                    {
-                        headers: {
-                            'X-RapidAPI-Key': apiKey,
-                            'X-RapidAPI-Host': CONFIG.API_HOST
-                        },
+                // Finnhub.io has a 60 req/min limit, fetch prices in parallel
+                const pricePromises = symbols.map(async (symbol) => {
+                    const encodedSymbol = encodeURIComponent(symbol);
+                    const url = `${CONFIG.API_BASE}/quote?symbol=${encodedSymbol}&${CONFIG.API_KEY_PARAM}=${apiKey}`;
+                    
+                    const response = await fetch(url, {
                         signal: AbortSignal.timeout(15000)
-                    }
-                );
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP ${response.status} for ${symbol}`);
+                    
+                    const data = await response.json();
+                    
+                    // Finnhub API response format: { c: current price, h: high, l: low, o: open, pc: previous close, t: timestamp }
+                    return { symbol, price: data.c };
+                });
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
+                const results = await Promise.all(pricePromises);
                 const prices = {};
                 
-                if (data.body) {
-                    data.body.forEach(q => {
-                        if (q.symbol && q.regularMarketPrice) {
-                            prices[q.symbol] = parseFloat(q.regularMarketPrice);
-                        }
-                    });
-                }
+                results.forEach(({ symbol, price }) => {
+                    if (price !== undefined && price !== null && price > 0) {
+                        prices[symbol] = parseFloat(price);
+                    }
+                });
                 
                 await dbSet('priceCache', { data: prices, time: Date.now() });
                 updateApiStatus(true);

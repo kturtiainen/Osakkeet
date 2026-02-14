@@ -32,7 +32,7 @@ self.addEventListener('activate', event => {
 // Fetch
 self.addEventListener('fetch', event => {
   // Skip API calls - always fetch fresh
-  if (event.request.url.includes('rapidapi.com')) {
+  if (event.request.url.includes('finnhub.io')) {
     return event.respondWith(fetch(event.request));
   }
   
