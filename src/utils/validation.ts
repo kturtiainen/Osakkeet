@@ -74,14 +74,14 @@ export function validateStock(
   if (!validateShares(shares)) {
     return {
       valid: false,
-      error: 'Osakkeiden määrän on oltava kelvollinen luku välillä 0-1000000000000000'
+      error: 'Osakkeiden määrän on oltava suurempi kuin 0 ja enintään 1000000000000000'
     };
   }
   
   if (!validatePrice(purchasePrice)) {
     return {
       valid: false,
-      error: 'Hankintahinnan on oltava kelvollinen luku välillä 0-1000000000000000'
+      error: 'Hankintahinnan on oltava suurempi kuin 0 ja enintään 1000000000000000'
     };
   }
   
