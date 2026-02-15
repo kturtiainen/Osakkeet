@@ -1,13 +1,10 @@
 /**
  * Yahoo Finance API service
- * Uses RapidAPI to fetch stock quotes
+ * Uses yfapi.net to fetch stock quotes
  */
 
 const API_HOST = import.meta.env.VITE_API_HOST || 'yfapi.net';
-// yfapi.net/v6/finance/quote yahoo-finance.p.rapidapi.com
 const API_BASE_URL = `https://${API_HOST}`;
-//const QUOTE_ENDPOINT = '/api/v1/markets/stock/get-quotes';
-// v6/finance/quote.  /market/v2/get-quotes
 const QUOTE_ENDPOINT = '/v6/finance/quote';
 const DEFAULT_TIMEOUT_MS = 15000;
 const MIN_TIMEOUT_MS = 1000;
@@ -19,17 +16,21 @@ const TIMEOUT_MS =
     ? Math.max(MIN_TIMEOUT_MS, parsedTimeout)
     : DEFAULT_TIMEOUT_MS;
 
+// Updated interface for new API format
 interface YahooQuoteResponse {
-  body: Array<{
-    symbol: string;
-    regularMarketPrice?: number;
-  }>;
+  quoteResponse: {
+    result: Array<{
+      symbol: string;
+      regularMarketPrice?: number;
+    }>;
+    error: null | string;
+  };
 }
 
 /**
  * Fetch stock quotes from Yahoo Finance API
  * @param symbols - Array of stock symbols to fetch
- * @param apiKey - RapidAPI key
+ * @param apiKey - API key for yfapi.net
  * @returns Record mapping symbol to current price
  * @throws Error if API request fails
  */
@@ -50,13 +51,11 @@ export async function fetchQuotes(
   const ticker = uniqueSymbols.join(',');
 
   const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?region=US&symbols=${encodeURIComponent(ticker)}`;
-alert(`Url: ${url}`);
+  
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-//        'X-RapidAPI-Key': apiKey,
-//        'X-RapidAPI-Host': API_HOST,
         'x-api-key': apiKey
       },
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -73,13 +72,19 @@ alert(`Url: ${url}`);
 
     const data: YahooQuoteResponse = await response.json();
 
-    if (!data.body || !Array.isArray(data.body)) {
+    // Updated validation for new API format
+    if (!data.quoteResponse || !Array.isArray(data.quoteResponse.result)) {
       throw new Error('Virheellinen API-vastaus');
     }
 
-    // Map symbols to prices
+    // Check for API errors
+    if (data.quoteResponse.error) {
+      throw new Error(`API-virhe: ${data.quoteResponse.error}`);
+    }
+
+    // Map symbols to prices - updated to use result instead of body
     const priceMap: Record<string, number> = {};
-    for (const quote of data.body) {
+    for (const quote of data.quoteResponse.result) {
       if (quote.symbol && typeof quote.regularMarketPrice === 'number') {
         priceMap[quote.symbol] = quote.regularMarketPrice;
       }
