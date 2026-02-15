@@ -3,7 +3,7 @@
  * Allows uppercase letters, numbers, dots, colons, underscores, and hyphens
  * Max length: 20 characters
  */
-const SYMBOL_REGEX = /^[A-Z0-9.:_\-]+$/;
+const SYMBOL_REGEX = /^[A-Z0-9.:_-]+$/;
 const MAX_SYMBOL_LENGTH = 20;
 
 /**
@@ -82,4 +82,22 @@ export function validateStock(
   }
   
   return { valid: true };
+}
+
+/**
+ * Type guard to check if stock object has valid required fields
+ * @param stock - Stock object to validate
+ * @returns True if stock has all required valid fields
+ */
+export function isValidStock(stock: { symbol?: string; shares?: number; purchasePrice?: number }): boolean {
+  return (
+    typeof stock.symbol === 'string' &&
+    stock.symbol.length > 0 &&
+    typeof stock.shares === 'number' &&
+    !Number.isNaN(stock.shares) &&
+    stock.shares > 0 &&
+    typeof stock.purchasePrice === 'number' &&
+    !Number.isNaN(stock.purchasePrice) &&
+    stock.purchasePrice > 0
+  );
 }

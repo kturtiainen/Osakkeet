@@ -4,6 +4,7 @@ import { AddStockForm } from './AddStockForm';
 import { StockList } from './StockList';
 import { decrypt } from '../utils/crypto';
 import { exportData, importData } from '../utils/data';
+import { isValidStock } from '../utils/validation';
 import { useDialog } from '../hooks/useDialog';
 import { Dialog } from './Dialog';
 
@@ -101,27 +102,100 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleImportPortfolio = async () => {
     const data = await importData<{ portfolio?: { stocks?: Array<{ symbol: string; shares: number; purchasePrice: number }> } }>();
-    if (data?.portfolio?.stocks) {
-      // Import stocks from the portfolio
-      data.portfolio.stocks.forEach((stock) => {
-        addStock({
-          symbol: stock.symbol,
-          shares: stock.shares,
-          purchasePrice: stock.purchasePrice,
-        });
-      });
-      await showDialog({
-        title: 'Tuotu onnistuneesti',
-        message: 'Salkku tuotu onnistuneesti!',
-        confirmText: 'OK',
-        type: 'info',
-      });
-    } else if (data !== null) {
+    
+    if (data === null) {
+      // User cancelled or no data
+      return;
+    }
+    
+    if (!data.portfolio?.stocks) {
       await showDialog({
         title: 'Virhe',
         message: 'Virhe tiedoston lukemisessa',
         confirmText: 'OK',
         type: 'error',
+      });
+      return;
+    }
+    
+    const stocks = data.portfolio.stocks;
+    
+    // Handle empty portfolio
+    if (stocks.length === 0) {
+      await showDialog({
+        title: 'Tyhjä salkku',
+        message: 'Salkussa ei ole yhtään osaketta tuotavaksi.',
+        confirmText: 'OK',
+        type: 'warning',
+      });
+      return;
+    }
+    
+    // Validate and import stocks
+    const successfulStocks: Array<{ symbol: string; shares: number; purchasePrice: number }> = [];
+    const failedStocks: Array<{ symbol: string; errorReason: string }> = [];
+    
+    stocks.forEach((stock) => {
+      if (isValidStock(stock)) {
+        successfulStocks.push(stock);
+      } else {
+        // Determine the specific validation error
+        let errorReason = 'Tuntematon virhe';
+        if (!stock.symbol || stock.symbol.length === 0) {
+          errorReason = 'Puuttuva symboli';
+        } else if (typeof stock.shares !== 'number' || Number.isNaN(stock.shares) || stock.shares <= 0) {
+          errorReason = 'Virheellinen osakkeiden määrä';
+        } else if (typeof stock.purchasePrice !== 'number' || Number.isNaN(stock.purchasePrice) || stock.purchasePrice <= 0) {
+          errorReason = 'Virheellinen hankintahinta';
+        }
+        failedStocks.push({ symbol: stock.symbol || 'Tuntematon', errorReason });
+      }
+    });
+    
+    // Import successful stocks
+    successfulStocks.forEach((stock) => {
+      addStock({
+        symbol: stock.symbol,
+        shares: stock.shares,
+        purchasePrice: stock.purchasePrice,
+      });
+    });
+    
+    // Show appropriate message based on results
+    const successCount = successfulStocks.length;
+    const failedCount = failedStocks.length;
+    
+    if (successCount === 0) {
+      // All imports failed
+      const errorDetails = failedStocks
+        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
+        .join('\n');
+      
+      await showDialog({
+        title: 'Tuonti epäonnistui',
+        message: `Yhtään osaketta ei voitu tuoda.\n\nEpäonnistuneet osakkeet:\n${errorDetails}`,
+        confirmText: 'OK',
+        type: 'error',
+      });
+    } else if (failedCount > 0) {
+      // Partial success
+      const errorDetails = failedStocks
+        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
+        .join('\n');
+      
+      await showDialog({
+        title: 'Osittain epäonnistunut',
+        message: `${successCount} osaketta tuotu onnistuneesti. Seuraavat epäonnistuivat:\n${errorDetails}`,
+        confirmText: 'OK',
+        type: 'warning',
+      });
+    } else {
+      // All successful
+      await showDialog({
+        title: 'Tuotu onnistuneesti',
+        message: `${successCount} osaketta tuotu onnistuneesti!`,
+        confirmText: 'OK',
+        type: 'info',
       });
     }
   };
