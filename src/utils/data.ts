@@ -40,7 +40,8 @@ export const importData = async <T = unknown>(accept: string = '.json'): Promise
         try {
           const data = JSON.parse(event.target?.result as string) as T;
           resolve(data);
-        } catch {
+        } catch (error) {
+          console.error('Failed to parse imported JSON file', error);
           resolve(null);
         }
       };
