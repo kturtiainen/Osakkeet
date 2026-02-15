@@ -14,7 +14,7 @@ describe('yahooFinanceApi', () => {
       await expect(fetchQuotes(['AAPL'], '')).rejects.toThrow('API-avain puuttuu');
     });
 
-    it('should return empty object for empty symbols array', async () => {
+    it('should return empty prices and names for empty symbols array', async () => {
       const result = await fetchQuotes([], 'test-api-key');
       expect(result).toEqual({ prices: {}, names: {} });
     });
