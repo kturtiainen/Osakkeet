@@ -72,7 +72,7 @@ export function StockCard({ stock }: StockCardProps) {
           </div>
           
           {/* Daily change in currency */}
-          {hasDailyChange && stock.priceChange !== undefined && (
+          {hasDailyChange && (
             <div className={`text-sm font-medium ${dailyChangeColor}`}>
               {isDailyPositive ? '+' : ''}{formatCurrencyWithSymbol(stock.priceChange, currency)} tänään
             </div>
