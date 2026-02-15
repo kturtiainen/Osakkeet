@@ -94,10 +94,10 @@ async function fetchBatch(
         priceMap[quote.symbol] = quote.regularMarketPrice;
         
         // Store daily change data
-        if (typeof quote.regularMarketChange === 'number') {
+        if (typeof quote.regularMarketChange === 'number' && isFinite(quote.regularMarketChange)) {
           changeMap[quote.symbol] = quote.regularMarketChange;
         }
-        if (typeof quote.regularMarketChangePercent === 'number') {
+        if (typeof quote.regularMarketChangePercent === 'number' && isFinite(quote.regularMarketChangePercent)) {
           changePercentMap[quote.symbol] = quote.regularMarketChangePercent;
         }
         if (quote.currency) {
