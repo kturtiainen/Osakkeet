@@ -60,7 +60,7 @@ export function StockCard({ stock }: StockCardProps) {
                 ${dailyChangeBgColor} ${dailyChangeColor}
               `}
             >
-              {dailyChangeIcon} {Math.abs(stock.priceChangePercent).toFixed(2)}%
+              {dailyChangeIcon} {Math.abs(stock.priceChangePercent ?? 0).toFixed(2)}%
             </span>
           )}
         </div>
@@ -68,13 +68,13 @@ export function StockCard({ stock }: StockCardProps) {
         {/* Price and daily change */}
         <div className="mb-4">
           <div className="text-3xl font-bold text-white mb-1">
-            {formatCurrencyWithSymbol(stock.currentPrice, currency)}
+            {formatCurrencyWithSymbol(stock.currentPrice ?? 0, currency)}
           </div>
           
           {/* Daily change in currency */}
           {hasDailyChange && (
             <div className={`text-sm font-medium ${dailyChangeColor}`}>
-              {isDailyPositive ? '+' : ''}{formatCurrencyWithSymbol(stock.priceChange, currency)} tänään
+              {isDailyPositive ? '+' : ''}{formatCurrencyWithSymbol(stock.priceChange ?? 0, currency)} tänään
             </div>
           )}
         </div>
