@@ -50,7 +50,7 @@ export function useDailyRefresh(onRefresh?: () => void) {
       const safeMs = Math.max(MIN_DELAY, Math.min(ms, MAX_DELAY));
       
       if (ms !== safeMs) {
-        console.warn(`Adjusted refresh delay from ${String(ms)}ms to ${String(safeMs)}ms for safety`);
+        console.warn(`Adjusted refresh delay from ${ms}ms to ${safeMs}ms for safety`);
       }
       
       timerId = setTimeout(async () => {
