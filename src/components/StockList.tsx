@@ -35,8 +35,11 @@ export function StockList({ onDelete }: StockListProps) {
                      border border-gray-700/50 hover:border-gray-600 transition-colors"
         >
           <div className="flex-1">
-            <div className="font-semibold text-white">{stock.symbol}</div>
+            <div className="font-semibold text-white">
+              {stock.name || stock.symbol}
+            </div>
             <div className="text-sm text-gray-400">
+              {stock.name && <span className="text-gray-600">{stock.symbol} • </span>}
               {stock.shares} kpl @ {formatCurrency(stock.purchasePrice)}
             </div>
           </div>

@@ -16,16 +16,16 @@ describe('yahooFinanceApi', () => {
 
     it('should return empty object for empty symbols array', async () => {
       const result = await fetchQuotes([], 'test-api-key');
-      expect(result).toEqual({});
+      expect(result).toEqual({ prices: {}, names: {} });
     });
 
     it('should fetch quotes for single batch (≤10 symbols)', async () => {
       const mockResponse = {
         quoteResponse: {
           result: [
-            { symbol: 'AAPL', regularMarketPrice: 150.00 },
-            { symbol: 'GOOGL', regularMarketPrice: 2800.00 },
-            { symbol: 'MSFT', regularMarketPrice: 300.00 }
+            { symbol: 'AAPL', regularMarketPrice: 150.00, displayName: 'Apple' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, displayName: 'Alphabet Inc.' },
+            { symbol: 'MSFT', regularMarketPrice: 300.00, displayName: 'Microsoft' }
           ],
           error: null
         }
@@ -39,9 +39,16 @@ describe('yahooFinanceApi', () => {
       const result = await fetchQuotes(['AAPL', 'GOOGL', 'MSFT'], 'test-api-key');
       
       expect(result).toEqual({
-        AAPL: 150.00,
-        GOOGL: 2800.00,
-        MSFT: 300.00
+        prices: {
+          AAPL: 150.00,
+          GOOGL: 2800.00,
+          MSFT: 300.00
+        },
+        names: {
+          AAPL: 'Apple',
+          GOOGL: 'Alphabet Inc.',
+          MSFT: 'Microsoft'
+        }
       });
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
@@ -54,7 +61,8 @@ describe('yahooFinanceApi', () => {
         quoteResponse: {
           result: Array.from({ length: 10 }, (_, i) => ({
             symbol: `STOCK${i + 1}`,
-            regularMarketPrice: 100 + i
+            regularMarketPrice: 100 + i,
+            displayName: `Stock ${i + 1}`
           })),
           error: null
         }
@@ -64,7 +72,8 @@ describe('yahooFinanceApi', () => {
         quoteResponse: {
           result: Array.from({ length: 5 }, (_, i) => ({
             symbol: `STOCK${i + 11}`,
-            regularMarketPrice: 110 + i
+            regularMarketPrice: 110 + i,
+            displayName: `Stock ${i + 11}`
           })),
           error: null
         }
@@ -82,9 +91,12 @@ describe('yahooFinanceApi', () => {
 
       const result = await fetchQuotes(symbols, 'test-api-key');
       
-      expect(Object.keys(result)).toHaveLength(15);
-      expect(result.STOCK1).toBe(100);
-      expect(result.STOCK11).toBe(110);
+      expect(Object.keys(result.prices)).toHaveLength(15);
+      expect(result.prices.STOCK1).toBe(100);
+      expect(result.prices.STOCK11).toBe(110);
+      expect(Object.keys(result.names)).toHaveLength(15);
+      expect(result.names.STOCK1).toBe('Stock 1');
+      expect(result.names.STOCK11).toBe('Stock 11');
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
 
@@ -96,16 +108,16 @@ describe('yahooFinanceApi', () => {
       const mockResponse1 = {
         quoteResponse: {
           result: [
-            { symbol: 'AAPL', regularMarketPrice: 150.00 },
-            { symbol: 'GOOGL', regularMarketPrice: 2800.00 },
-            { symbol: 'MSFT', regularMarketPrice: 300.00 },
-            { symbol: 'TSLA', regularMarketPrice: 700.00 },
-            { symbol: 'AMZN', regularMarketPrice: 3300.00 },
-            { symbol: 'FB', regularMarketPrice: 350.00 },
-            { symbol: 'NVDA', regularMarketPrice: 500.00 },
-            { symbol: 'NFLX', regularMarketPrice: 600.00 },
-            { symbol: 'INTC', regularMarketPrice: 50.00 },
-            { symbol: 'AMD', regularMarketPrice: 120.00 }
+            { symbol: 'AAPL', regularMarketPrice: 150.00, displayName: 'Apple' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, displayName: 'Alphabet Inc.' },
+            { symbol: 'MSFT', regularMarketPrice: 300.00, displayName: 'Microsoft' },
+            { symbol: 'TSLA', regularMarketPrice: 700.00, displayName: 'Tesla' },
+            { symbol: 'AMZN', regularMarketPrice: 3300.00, displayName: 'Amazon' },
+            { symbol: 'FB', regularMarketPrice: 350.00, displayName: 'Meta' },
+            { symbol: 'NVDA', regularMarketPrice: 500.00, displayName: 'NVIDIA' },
+            { symbol: 'NFLX', regularMarketPrice: 600.00, displayName: 'Netflix' },
+            { symbol: 'INTC', regularMarketPrice: 50.00, displayName: 'Intel' },
+            { symbol: 'AMD', regularMarketPrice: 120.00, displayName: 'AMD' }
           ],
           error: null
         }
@@ -125,9 +137,11 @@ describe('yahooFinanceApi', () => {
       const result = await fetchQuotes(symbols, 'test-api-key');
       
       // Should return results from successful batch
-      expect(Object.keys(result)).toHaveLength(10);
-      expect(result.AAPL).toBe(150.00);
-      expect(result.AMD).toBe(120.00);
+      expect(Object.keys(result.prices)).toHaveLength(10);
+      expect(result.prices.AAPL).toBe(150.00);
+      expect(result.prices.AMD).toBe(120.00);
+      expect(result.names.AAPL).toBe('Apple');
+      expect(result.names.AMD).toBe('AMD');
       
       // Should log warning about partial failure
       expect(consoleWarnSpy).toHaveBeenCalled();
@@ -149,8 +163,8 @@ describe('yahooFinanceApi', () => {
       const mockResponse = {
         quoteResponse: {
           result: [
-            { symbol: 'AAPL', regularMarketPrice: 150.00 },
-            { symbol: 'GOOGL', regularMarketPrice: 2800.00 }
+            { symbol: 'AAPL', regularMarketPrice: 150.00, displayName: 'Apple' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, displayName: 'Alphabet Inc.' }
           ],
           error: null
         }
@@ -163,7 +177,8 @@ describe('yahooFinanceApi', () => {
 
       const result = await fetchQuotes(['AAPL', 'GOOGL', 'AAPL', 'GOOGL'], 'test-api-key');
       
-      expect(Object.keys(result)).toHaveLength(2);
+      expect(Object.keys(result.prices)).toHaveLength(2);
+      expect(Object.keys(result.names)).toHaveLength(2);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
@@ -192,7 +207,8 @@ describe('yahooFinanceApi', () => {
         quoteResponse: {
           result: symbols.map((symbol, i) => ({
             symbol,
-            regularMarketPrice: 100 + i
+            regularMarketPrice: 100 + i,
+            displayName: `Stock ${i + 1}`
           })),
           error: null
         }
@@ -205,7 +221,8 @@ describe('yahooFinanceApi', () => {
 
       const result = await fetchQuotes(symbols, 'test-api-key');
       
-      expect(Object.keys(result)).toHaveLength(10);
+      expect(Object.keys(result.prices)).toHaveLength(10);
+      expect(Object.keys(result.names)).toHaveLength(10);
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
@@ -216,7 +233,8 @@ describe('yahooFinanceApi', () => {
         quoteResponse: {
           result: symbols.slice(0, 10).map((symbol, i) => ({
             symbol,
-            regularMarketPrice: 100 + i
+            regularMarketPrice: 100 + i,
+            displayName: `Stock ${i + 1}`
           })),
           error: null
         }
@@ -226,7 +244,8 @@ describe('yahooFinanceApi', () => {
         quoteResponse: {
           result: symbols.slice(10, 20).map((symbol, i) => ({
             symbol,
-            regularMarketPrice: 110 + i
+            regularMarketPrice: 110 + i,
+            displayName: `Stock ${i + 11}`
           })),
           error: null
         }
@@ -244,7 +263,8 @@ describe('yahooFinanceApi', () => {
 
       const result = await fetchQuotes(symbols, 'test-api-key');
       
-      expect(Object.keys(result)).toHaveLength(20);
+      expect(Object.keys(result.prices)).toHaveLength(20);
+      expect(Object.keys(result.names)).toHaveLength(20);
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
   });

@@ -21,6 +21,7 @@ export function usePrices() {
   const isRefreshingRef = useRef(false);
 
   const updatePrices = usePortfolioStore((state) => state.updatePrices);
+  const updateStockNames = usePortfolioStore((state) => state.updateStockNames);
   const setPriceCache = usePortfolioStore((state) => state.setPriceCache);
   const setLastRefreshDate = usePortfolioStore((state) => state.setLastRefreshDate);
 
@@ -54,9 +55,10 @@ export function usePrices() {
     setError(null);
 
     try {
-      const prices = await fetchQuotes(Array.from(allSymbols), decryptedKey);
-      updatePrices(prices);
-      setPriceCache({ data: prices, timestamp: Date.now() });
+      const result = await fetchQuotes(Array.from(allSymbols), decryptedKey);
+      updatePrices(result.prices);
+      updateStockNames(result.names);
+      setPriceCache({ data: result.prices, names: result.names, timestamp: Date.now() });
       setLastRefreshDate(getHelsinkiDate());
       return true;
     } catch (err) {
@@ -65,13 +67,16 @@ export function usePrices() {
       // Use cached prices if valid, otherwise keep current prices
       if (priceCache && isCacheValid(priceCache)) {
         updatePrices(priceCache.data);
+        if (priceCache.names) {
+          updateStockNames(priceCache.names);
+        }
       }
       return false;
     } finally {
       setIsLoading(false);
       isRefreshingRef.current = false;
     }
-  }, [updatePrices, setPriceCache, setLastRefreshDate]);
+  }, [updatePrices, updateStockNames, setPriceCache, setLastRefreshDate]);
 
   return {
     isLoading,

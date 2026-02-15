@@ -185,6 +185,18 @@ export const usePortfolioStore = create<AppState>()(
         }));
       },
 
+      updateStockNames: (names: Record<string, string>) => {
+        set((state) => ({
+          portfolios: state.portfolios.map((portfolio) => ({
+            ...portfolio,
+            stocks: portfolio.stocks.map((stock) => ({
+              ...stock,
+              name: names[stock.symbol] ?? stock.name,
+            })),
+          })),
+        }));
+      },
+
       setLastRefreshDate: (date: string) => {
         set({ lastRefreshDate: date });
       },
