@@ -14,7 +14,7 @@ export function formatCurrency(value: number): string {
  * Format a number with currency symbol
  * @param value - Number to format
  * @param currency - Currency code (USD, EUR, SEK, etc.)
- * @returns Formatted string like "1 234.56 USD" or "1 234,56 EUR"
+ * @returns Formatted string like "1 234,56 USD" or "1 234,56 EUR"
  */
 export function formatCurrencyWithSymbol(value: number, currency: string): string {
   return `${new Intl.NumberFormat('fi-FI', {
