@@ -47,7 +47,7 @@ export async function fetchQuotes(
   const ticker = uniqueSymbols.join(',');
 
   const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?region=IN&symbols=${encodeURIComponent(ticker)}`;
-
+alert(`Url: ${url}`);
   try {
     const response = await fetch(url, {
       method: 'GET',
