@@ -3,10 +3,12 @@
  * Uses RapidAPI to fetch stock quotes
  */
 
-const API_HOST = import.meta.env.VITE_API_HOST || 'yahoo-finance.p.rapidapi.com';
+const API_HOST = import.meta.env.VITE_API_HOST || 'yfapi.net';
+// yfapi.net/v6/finance/quote yahoo-finance.p.rapidapi.com
 const API_BASE_URL = `https://${API_HOST}`;
 //const QUOTE_ENDPOINT = '/api/v1/markets/stock/get-quotes';
-const QUOTE_ENDPOINT = '/market/v2/get-quotes';
+// v6/finance/quote.  /market/v2/get-quotes
+const QUOTE_ENDPOINT = '/v6/finance/quote';
 const DEFAULT_TIMEOUT_MS = 15000;
 const MIN_TIMEOUT_MS = 1000;
 const rawTimeout = import.meta.env.VITE_API_TIMEOUT_MS;
