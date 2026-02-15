@@ -34,17 +34,17 @@ export function StockCard({ stock }: StockCardProps) {
       <div className="p-5 pl-6">
         {/* Header with symbol and change badge */}
         <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-bold bg-gradient-purple-pink bg-clip-text text-transparent">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xl font-bold bg-gradient-purple-pink bg-clip-text text-transparent truncate">
               {stock.name || stock.symbol}
             </h3>
             {stock.name && (
-              <p className="text-xs text-gray-500 mt-1">{stock.symbol}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{stock.symbol}</p>
             )}
           </div>
           <span
             className={`
-              px-3 py-1 rounded-full text-sm font-semibold
+              flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-semibold
               ${
                 stats.priceChange >= 0
                   ? 'bg-green-500/20 text-green-400 border border-green-500/30'
