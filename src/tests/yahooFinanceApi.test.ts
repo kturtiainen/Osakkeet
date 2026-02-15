@@ -267,5 +267,108 @@ describe('yahooFinanceApi', () => {
       expect(Object.keys(result.names)).toHaveLength(20);
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
+
+    it('should fallback to shortName when displayName is missing', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { symbol: 'AAPL', regularMarketPrice: 150.00, shortName: 'Apple Inc.' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, shortName: 'Alphabet Inc.' }
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL', 'GOOGL'], 'test-api-key');
+      
+      expect(result.names).toEqual({
+        AAPL: 'Apple Inc.',
+        GOOGL: 'Alphabet Inc.'
+      });
+    });
+
+    it('should fallback to longName when displayName and shortName are missing', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { symbol: 'AAPL', regularMarketPrice: 150.00, longName: 'Apple Inc. (Full Name)' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, longName: 'Alphabet Inc. Class A' }
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL', 'GOOGL'], 'test-api-key');
+      
+      expect(result.names).toEqual({
+        AAPL: 'Apple Inc. (Full Name)',
+        GOOGL: 'Alphabet Inc. Class A'
+      });
+    });
+
+    it('should prioritize displayName over shortName and longName', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { 
+              symbol: 'AAPL', 
+              regularMarketPrice: 150.00, 
+              displayName: 'Apple',
+              shortName: 'Apple Inc.',
+              longName: 'Apple Inc. (Full Name)'
+            }
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL'], 'test-api-key');
+      
+      expect(result.names.AAPL).toBe('Apple');
+    });
+
+    it('should handle mixed name fields across different stocks', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { symbol: 'AAPL', regularMarketPrice: 150.00, displayName: 'Apple' },
+            { symbol: 'GOOGL', regularMarketPrice: 2800.00, shortName: 'Alphabet Inc.' },
+            { symbol: 'MSFT', regularMarketPrice: 300.00, longName: 'Microsoft Corporation' },
+            { symbol: 'TSLA', regularMarketPrice: 700.00 } // No name field
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL', 'GOOGL', 'MSFT', 'TSLA'], 'test-api-key');
+      
+      expect(result.names).toEqual({
+        AAPL: 'Apple',
+        GOOGL: 'Alphabet Inc.',
+        MSFT: 'Microsoft Corporation'
+      });
+      // TSLA should not be in names since it has no name field
+      expect(result.names.TSLA).toBeUndefined();
+    });
   });
 });
