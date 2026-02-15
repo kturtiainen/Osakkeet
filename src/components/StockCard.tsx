@@ -53,7 +53,7 @@ export function StockCard({ stock }: StockCardProps) {
           </div>
           
           {/* Daily change badge */}
-          {hasDailyChange && stock.priceChangePercent !== undefined && (
+          {hasDailyChange && (
             <span
               className={`
                 flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-semibold border
