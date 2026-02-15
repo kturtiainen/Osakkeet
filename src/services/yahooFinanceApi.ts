@@ -57,7 +57,7 @@ alert(`Url: ${url}`);
       headers: {
 //        'X-RapidAPI-Key': apiKey,
 //        'X-RapidAPI-Host': API_HOST,
-        'x-api-key': apikey
+        'x-api-key': apiKey
       },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
