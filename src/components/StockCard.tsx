@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Stock } from '../types';
-import { formatNumber, formatPercentage } from '../utils/format';
+import { formatNumber, formatPercentage, formatCurrencyWithSymbol } from '../utils/format';
 
 interface StockCardProps {
   stock: Stock;
@@ -66,13 +66,13 @@ export function StockCard({ stock }: StockCardProps) {
         {/* Price and daily change */}
         <div className="mb-4">
           <div className="text-3xl font-bold text-white mb-1">
-            {stock.currentPrice.toFixed(2)} {currency}
+            {formatCurrencyWithSymbol(stock.currentPrice, currency)}
           </div>
           
           {/* Daily change in currency */}
           {hasDailyChange && stock.priceChange !== undefined && (
             <div className={`text-sm font-medium ${dailyChangeColor}`}>
-              {isDailyPositive ? '+' : ''}{stock.priceChange.toFixed(2)} {currency} tänään
+              {isDailyPositive ? '+' : ''}{formatCurrencyWithSymbol(stock.priceChange, currency)} tänään
             </div>
           )}
         </div>
@@ -89,21 +89,21 @@ export function StockCard({ stock }: StockCardProps) {
           <div>
             <div className="text-xs text-gray-500 mb-1">Hankintahinta</div>
             <div className="text-lg font-semibold text-white">
-              {stock.purchasePrice.toFixed(2)} {currency}
+              {formatCurrencyWithSymbol(stock.purchasePrice, currency)}
             </div>
           </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-1">Arvo yhteensä</div>
             <div className="text-lg font-semibold text-white">
-              {stats.totalValue.toFixed(2)} {currency}
+              {formatCurrencyWithSymbol(stats.totalValue, currency)}
             </div>
           </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-1">Tuotto</div>
             <div className={`text-lg font-semibold ${profitData.colorClass}`}>
-              {stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)} {currency}
+              {stats.profit >= 0 ? '+' : ''}{formatCurrencyWithSymbol(stats.profit, currency)}
             </div>
             <div className={`text-xs ${profitData.colorClass}`}>
               {profitData.text}
