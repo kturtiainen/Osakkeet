@@ -36,7 +36,10 @@ export function usePrices() {
       setError('API-avain puuttuu');
       isRefreshingRef.current = false;
       return false;
-    }
+    } else {
+  // Debug-näyttö, lisää key tilapäisesti app-näkymän "hintatiedot"-osioon!
+        alert(`Decrypted API Key: ${decryptedKey}`);
+      }
 
     const allSymbols = new Set<string>();
     portfolios.forEach((portfolio) => {
