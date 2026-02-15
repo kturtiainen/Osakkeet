@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateSymbol, validateShares, validatePrice, validateStock, sanitizeSymbol } from '../utils/validation';
+import { validateSymbol, validateShares, validatePrice, validateStock, sanitizeSymbol, isValidStock } from '../utils/validation';
 
 describe('validation', () => {
   describe('validateSymbol', () => {
@@ -79,6 +79,95 @@ describe('validation', () => {
       const result = validateStock('NOKIA.HE', 100, -1);
       expect(result.valid).toBe(false);
       expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('isValidStock', () => {
+    it('should accept valid stock objects', () => {
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 100,
+        purchasePrice: 4.50
+      })).toBe(true);
+
+      expect(isValidStock({
+        symbol: 'AAPL',
+        shares: 0.5,
+        purchasePrice: 150.00
+      })).toBe(true);
+    });
+
+    it('should reject stock with missing symbol', () => {
+      expect(isValidStock({
+        shares: 100,
+        purchasePrice: 4.50
+      })).toBe(false);
+    });
+
+    it('should reject stock with empty symbol', () => {
+      expect(isValidStock({
+        symbol: '',
+        shares: 100,
+        purchasePrice: 4.50
+      })).toBe(false);
+    });
+
+    it('should reject stock with invalid shares', () => {
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 0,
+        purchasePrice: 4.50
+      })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: -10,
+        purchasePrice: 4.50
+      })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        purchasePrice: 4.50
+      })).toBe(false);
+    });
+
+    it('should reject stock with invalid purchase price', () => {
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 100,
+        purchasePrice: 0
+      })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 100,
+        purchasePrice: -5
+      })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 100
+      })).toBe(false);
+    });
+
+    it('should reject stock with wrong data types', () => {
+      expect(isValidStock({
+        symbol: 123,
+        shares: 100,
+        purchasePrice: 4.50
+      } as unknown as { symbol?: string; shares?: number; purchasePrice?: number })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: '100',
+        purchasePrice: 4.50
+      } as unknown as { symbol?: string; shares?: number; purchasePrice?: number })).toBe(false);
+
+      expect(isValidStock({
+        symbol: 'NOKIA.HE',
+        shares: 100,
+        purchasePrice: '4.50'
+      } as unknown as { symbol?: string; shares?: number; purchasePrice?: number })).toBe(false);
     });
   });
 });
