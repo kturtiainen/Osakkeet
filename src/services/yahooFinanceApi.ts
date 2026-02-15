@@ -55,8 +55,9 @@ alert(`Url: ${url}`);
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': API_HOST,
+//        'X-RapidAPI-Key': apiKey,
+//        'X-RapidAPI-Host': API_HOST,
+        'x-api-key': apikey
       },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
