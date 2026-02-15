@@ -101,16 +101,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
 
   const handleImportPortfolio = async () => {
+    const data = await importData<{ portfolio?: { stocks?: Array<{ symbol: string; shares: number; purchasePrice: number }> } }>();
+    
+    if (data === null) {
+      // User cancelled or no data
+      return;
+    }
+    
     setIsProcessing(true);
     
     try {
-      const data = await importData<{ portfolio?: { stocks?: Array<{ symbol: string; shares: number; purchasePrice: number }> } }>();
-      
-      if (data === null) {
-        // User cancelled or no data
-        return;
-      }
-      
       if (!data.portfolio?.stocks) {
         await showDialog({
           title: 'Virhe',
