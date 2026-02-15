@@ -18,14 +18,20 @@ export function getHelsinkiDate(): string {
  * Get current time in Helsinki timezone
  */
 export function getHelsinkiTime(): { hours: number; minutes: number } {
-  const helsinkiTime = new Intl.DateTimeFormat('fi-FI', {
+  const formatter = new Intl.DateTimeFormat('fi-FI', {
     timeZone: 'Europe/Helsinki',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(new Date());
+  });
   
-  const [hours, minutes] = helsinkiTime.split(':').map(Number);
+  const parts = formatter.formatToParts(new Date());
+  const hourPart = parts.find(p => p.type === 'hour');
+  const minutePart = parts.find(p => p.type === 'minute');
+  
+  const hours = hourPart ? Number(hourPart.value) : 0;
+  const minutes = minutePart ? Number(minutePart.value) : 0;
+  
   return { hours, minutes };
 }
 
@@ -60,11 +66,12 @@ export function msUntilNextRefresh(): number {
   const targetMinutes = 14 * 60;
   
   let daysToAdd = 0;
+  const MAX_DAYS_TO_CHECK = 14; // Don't search more than 2 weeks
   
   if (currentMinutes >= targetMinutes || !isWeekday()) {
     // If it's past 14:00 today or weekend, find next weekday
     daysToAdd = 1;
-    while (true) {
+    while (daysToAdd < MAX_DAYS_TO_CHECK) {
       const checkDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
       const checkDay = new Intl.DateTimeFormat('fi-FI', {
         timeZone: 'Europe/Helsinki',
@@ -76,15 +83,31 @@ export function msUntilNextRefresh(): number {
       }
       daysToAdd++;
     }
+    
+    // If we exhausted the loop without finding a weekday, return a safe default
+    if (daysToAdd >= MAX_DAYS_TO_CHECK) {
+      console.error('Failed to find next weekday within 14 days, using 24h default');
+      return 24 * 60 * 60 * 1000; // Default to 24 hours
+    }
   }
   
   // Calculate milliseconds
   const msInDay = 24 * 60 * 60 * 1000;
   const msUntilTarget = (targetMinutes - currentMinutes) * 60 * 1000;
   
+  let result: number;
   if (daysToAdd === 0) {
-    return msUntilTarget;
+    result = msUntilTarget;
   } else {
-    return (daysToAdd * msInDay) + msUntilTarget;
+    result = (daysToAdd * msInDay) + msUntilTarget;
   }
+  
+  // Ensure result is reasonable (between 0 and 7 days)
+  const MAX_DELAY = 7 * 24 * 60 * 60 * 1000;
+  if (result < 0 || result > MAX_DELAY) {
+    console.error('Invalid refresh time calculated, using 24h default', { result });
+    return 24 * 60 * 60 * 1000;
+  }
+  
+  return result;
 }
