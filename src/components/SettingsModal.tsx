@@ -168,7 +168,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (successCount === 0) {
       // All imports failed
       const errorDetails = failedStocks
-        .map((stock) => `symbol=${stock.symbol}: ${stock.errorReason}`)
+        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
         .join('\n');
       
       await showDialog({
@@ -180,7 +180,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } else if (failedCount > 0) {
       // Partial success
       const errorDetails = failedStocks
-        .map((stock) => `symbol=${stock.symbol}: ${stock.errorReason}`)
+        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
         .join('\n');
       
       await showDialog({
