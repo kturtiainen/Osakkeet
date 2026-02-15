@@ -51,14 +51,14 @@ export function StockCard({ stock }: StockCardProps) {
           </div>
           
           {/* Daily change badge */}
-          {hasDailyChange && (
+          {hasDailyChange && stock.priceChangePercent !== undefined && (
             <span
               className={`
                 flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-semibold border
                 ${dailyChangeBgColor} ${dailyChangeColor}
               `}
             >
-              {dailyChangeIcon} {Math.abs(stock.priceChangePercent!).toFixed(2)}%
+              {dailyChangeIcon} {Math.abs(stock.priceChangePercent).toFixed(2)}%
             </span>
           )}
         </div>
@@ -70,9 +70,9 @@ export function StockCard({ stock }: StockCardProps) {
           </div>
           
           {/* Daily change in currency */}
-          {hasDailyChange && (
+          {hasDailyChange && stock.priceChange !== undefined && (
             <div className={`text-sm font-medium ${dailyChangeColor}`}>
-              {isDailyPositive ? '+' : ''}{stock.priceChange!.toFixed(2)} {currency} tänään
+              {isDailyPositive ? '+' : ''}{stock.priceChange.toFixed(2)} {currency} tänään
             </div>
           )}
         </div>
