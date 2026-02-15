@@ -108,95 +108,107 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       return;
     }
     
-    if (!data.portfolio?.stocks) {
-      await showDialog({
-        title: 'Virhe',
-        message: 'Virhe tiedoston lukemisessa',
-        confirmText: 'OK',
-        type: 'error',
-      });
-      return;
-    }
+    setIsProcessing(true);
     
-    const stocks = data.portfolio.stocks;
-    
-    // Handle empty portfolio
-    if (stocks.length === 0) {
-      await showDialog({
-        title: 'Tyhjä salkku',
-        message: 'Salkussa ei ole yhtään osaketta tuotavaksi.',
-        confirmText: 'OK',
-        type: 'warning',
-      });
-      return;
-    }
-    
-    // Validate and import stocks
-    const successfulStocks: Array<{ symbol: string; shares: number; purchasePrice: number }> = [];
-    const failedStocks: Array<{ symbol: string; errorReason: string }> = [];
-    
-    stocks.forEach((stock) => {
-      if (isValidStock(stock)) {
-        successfulStocks.push(stock);
-      } else {
-        // Determine the specific validation error
-        let errorReason = 'Tuntematon virhe';
-        if (!stock.symbol || stock.symbol.length === 0) {
-          errorReason = 'Puuttuva symboli';
-        } else if (typeof stock.shares !== 'number' || Number.isNaN(stock.shares) || stock.shares <= 0) {
-          errorReason = 'Virheellinen osakkeiden määrä';
-        } else if (typeof stock.purchasePrice !== 'number' || Number.isNaN(stock.purchasePrice) || stock.purchasePrice <= 0) {
-          errorReason = 'Virheellinen hankintahinta';
-        }
-        failedStocks.push({ symbol: stock.symbol || 'Tuntematon', errorReason });
+    try {
+      if (!data.portfolio?.stocks) {
+        await showDialog({
+          title: 'Virhe',
+          message: 'Virhe tiedoston lukemisessa',
+          confirmText: 'OK',
+          type: 'error',
+        });
+        return;
       }
-    });
-    
-    // Import successful stocks
-    successfulStocks.forEach((stock) => {
-      addStock({
-        symbol: stock.symbol,
-        shares: stock.shares,
-        purchasePrice: stock.purchasePrice,
-      });
-    });
-    
-    // Show appropriate message based on results
-    const successCount = successfulStocks.length;
-    const failedCount = failedStocks.length;
-    
-    if (successCount === 0) {
-      // All imports failed
-      const errorDetails = failedStocks
-        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
-        .join('\n');
       
-      await showDialog({
-        title: 'Tuonti epäonnistui',
-        message: `Yhtään osaketta ei voitu tuoda.\n\nEpäonnistuneet osakkeet:\n${errorDetails}`,
-        confirmText: 'OK',
-        type: 'error',
-      });
-    } else if (failedCount > 0) {
-      // Partial success
-      const errorDetails = failedStocks
-        .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
-        .join('\n');
+      const stocks = data.portfolio.stocks;
       
-      await showDialog({
-        title: 'Osittain epäonnistunut',
-        message: `${successCount} osaketta tuotu onnistuneesti. Seuraavat epäonnistuivat:\n${errorDetails}`,
-        confirmText: 'OK',
-        type: 'warning',
+      // Handle empty portfolio
+      if (stocks.length === 0) {
+        await showDialog({
+          title: 'Tyhjä salkku',
+          message: 'Salkussa ei ole yhtään osaketta tuotavaksi.',
+          confirmText: 'OK',
+          type: 'warning',
+        });
+        return;
+      }
+      
+      // Validate and import stocks
+      const successfulStocks: Array<{ symbol: string; shares: number; purchasePrice: number }> = [];
+      const failedStocks: Array<{ symbol: string; errorReason: string }> = [];
+      
+      stocks.forEach((stock) => {
+        if (isValidStock(stock)) {
+          successfulStocks.push(stock);
+        } else {
+          // Determine the specific validation error
+          let errorReason = 'Tuntematon virhe';
+          if (!stock.symbol || stock.symbol.length === 0) {
+            errorReason = 'Puuttuva symboli';
+          } else if (typeof stock.shares !== 'number' || Number.isNaN(stock.shares) || stock.shares <= 0) {
+            errorReason = 'Virheellinen osakkeiden määrä';
+          } else if (typeof stock.purchasePrice !== 'number' || Number.isNaN(stock.purchasePrice) || stock.purchasePrice <= 0) {
+            errorReason = 'Virheellinen hankintahinta';
+          }
+          failedStocks.push({ symbol: stock.symbol || 'Tuntematon', errorReason });
+        }
       });
-    } else {
-      // All successful
-      await showDialog({
-        title: 'Tuotu onnistuneesti',
-        message: `${successCount} osaketta tuotu onnistuneesti!`,
-        confirmText: 'OK',
-        type: 'info',
+      
+      // Import successful stocks
+      successfulStocks.forEach((stock) => {
+        addStock({
+          symbol: stock.symbol,
+          shares: stock.shares,
+          purchasePrice: stock.purchasePrice,
+        });
       });
+      
+      // Show appropriate message based on results
+      const successCount = successfulStocks.length;
+      const failedCount = failedStocks.length;
+      
+      if (successCount === 0) {
+        // All imports failed
+        const errorDetails = failedStocks
+          .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
+          .join('\n');
+        
+        await showDialog({
+          title: 'Tuonti epäonnistui',
+          message: `Yhtään osaketta ei voitu tuoda.\n\nEpäonnistuneet osakkeet:\n${errorDetails}`,
+          confirmText: 'OK',
+          type: 'error',
+        });
+      } else if (failedCount > 0) {
+        // Partial success
+        const errorDetails = failedStocks
+          .map((stock) => `Symboli: ${stock.symbol} - ${stock.errorReason}`)
+          .join('\n');
+        
+        await showDialog({
+          title: 'Osittain epäonnistunut',
+          message: `${successCount} osaketta tuotu onnistuneesti. Seuraavat epäonnistuivat:\n${errorDetails}`,
+          confirmText: 'OK',
+          type: 'warning',
+        });
+        
+        // Close modal to show imported stocks
+        onClose();
+      } else {
+        // All successful
+        await showDialog({
+          title: 'Tuotu onnistuneesti',
+          message: `${successCount} osaketta tuotu onnistuneesti!`,
+          confirmText: 'OK',
+          type: 'info',
+        });
+        
+        // Close modal to show imported stocks
+        onClose();
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -364,10 +376,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     onClick={() => {
                       void handleImportPortfolio();
                     }}
+                    disabled={isProcessing}
                     className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-semibold
-                               transition-colors"
+                               transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    📂 Tuo salkku
+                    {isProcessing ? '⏳ Tuodaan...' : '📂 Tuo salkku'}
                   </button>
                 </div>
               </div>
