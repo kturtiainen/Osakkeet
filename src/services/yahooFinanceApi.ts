@@ -24,6 +24,8 @@ interface YahooQuoteResponse {
       symbol: string;
       regularMarketPrice?: number;
       displayName?: string;
+      shortName?: string;
+      longName?: string;
     }>;
     error: null | string;
   };
@@ -78,8 +80,13 @@ async function fetchBatch(
       if (quote.symbol && typeof quote.regularMarketPrice === 'number') {
         priceMap[quote.symbol] = quote.regularMarketPrice;
       }
-      if (quote.symbol && quote.displayName) {
-        nameMap[quote.symbol] = quote.displayName;
+      
+      // Try multiple name fields with priority order
+      if (quote.symbol) {
+        const name = quote.displayName || quote.shortName || quote.longName;
+        if (name) {
+          nameMap[quote.symbol] = name;
+        }
       }
     }
 
