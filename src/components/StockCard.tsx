@@ -66,6 +66,12 @@ export function StockCard({ stock }: StockCardProps) {
               {formatNumber(stock.shares)}
             </div>
           </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-1">Hankintahinta</div>
+            <div className="text-lg font-semibold text-white">
+              {formatCurrency(stock.purchasePrice)}
+            </div>
+          </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-1">Arvo yhteensä</div>
