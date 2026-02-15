@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { usePortfolioStore } from './store/portfolioStore';
 import { usePrices } from './hooks/usePrices';
 import { useDailyRefresh } from './hooks/useDailyRefresh';
@@ -22,10 +22,13 @@ function App() {
   const { isLoading, refreshPrices } = usePrices();
   const { messages, showSuccess, showError, showWarning, removeMessage } = useStatus();
 
-  // Automatic daily refresh
-  useDailyRefresh(() => {
+  // Memoize the auto-refresh callback to prevent infinite re-renders
+  const handleAutoRefresh = useCallback(() => {
     showSuccess('Hinnat päivitetty automaattisesti');
-  });
+  }, [showSuccess]);
+
+  // Automatic daily refresh
+  useDailyRefresh(handleAutoRefresh);
 
   const activePortfolio = useMemo(
     () => portfolios.find((p) => p.id === activePortfolioId),
