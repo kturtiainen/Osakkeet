@@ -31,18 +31,22 @@ export function useDialog() {
   }, []);
 
   const handleConfirm = useCallback(() => {
-    if (dialog.resolve) {
-      dialog.resolve(true);
-    }
-    setDialog({ ...dialog, isOpen: false });
-  }, [dialog]);
+    setDialog((prev) => {
+      if (prev.resolve) {
+        prev.resolve(true);
+      }
+      return { ...prev, isOpen: false, resolve: undefined };
+    });
+  }, []);
 
   const handleCancel = useCallback(() => {
-    if (dialog.resolve) {
-      dialog.resolve(false);
-    }
-    setDialog({ ...dialog, isOpen: false });
-  }, [dialog]);
+    setDialog((prev) => {
+      if (prev.resolve) {
+        prev.resolve(false);
+      }
+      return { ...prev, isOpen: false, resolve: undefined };
+    });
+  }, []);
 
   return {
     dialog,
