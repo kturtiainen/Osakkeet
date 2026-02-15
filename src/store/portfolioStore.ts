@@ -103,7 +103,26 @@ export const usePortfolioStore = create<AppState>()(
         );
         
         if (existingStock) {
-          return; // Don't add duplicate stocks
+          // Update existing stock instead of ignoring it
+          set((state) => ({
+            portfolios: state.portfolios.map((p) =>
+              p.id === state.activePortfolioId
+                ? {
+                    ...p,
+                    stocks: p.stocks.map((s) =>
+                      s.symbol === stock.symbol
+                        ? { 
+                            ...s, 
+                            shares: stock.shares, 
+                            purchasePrice: stock.purchasePrice 
+                          }
+                        : s
+                    ),
+                  }
+                : p
+            ),
+          }));
+          return;
         }
         
         const newStock: Stock = {
