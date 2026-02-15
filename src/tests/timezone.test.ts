@@ -20,7 +20,6 @@ describe('timezone', () => {
       expect(Number.isNaN(ms)).toBe(false);
     });
 
-    it('should be at least 1 minute (safety check)', () => {
     it('should handle weekend scenarios without infinite loop', () => {
       // This test verifies that the function completes in reasonable time
       // even on weekends (should skip to Monday)
