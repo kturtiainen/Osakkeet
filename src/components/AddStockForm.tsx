@@ -66,6 +66,7 @@ export function AddStockForm({ onAdd }: AddStockFormProps) {
                        transition-colors"
             placeholder="100"
             min="0"
+            max="1000000000"
             step="any"
           />
         </div>
@@ -83,7 +84,8 @@ export function AddStockForm({ onAdd }: AddStockFormProps) {
                        transition-colors"
             placeholder="4.50"
             min="0"
-            step="any"
+            max="1000000000"
+            step="0.01"
           />
         </div>
       </div>

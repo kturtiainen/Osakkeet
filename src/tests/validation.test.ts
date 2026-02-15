@@ -32,6 +32,18 @@ describe('validation', () => {
       expect(validateShares(-1)).toBe(false);
       expect(validateShares(NaN)).toBe(false);
     });
+
+    it('should reject Infinity', () => {
+      expect(validateShares(Infinity)).toBe(false);
+      expect(validateShares(-Infinity)).toBe(false);
+      expect(validateShares(parseFloat('1e999'))).toBe(false); // becomes Infinity
+    });
+
+    it('should reject values above upper bound', () => {
+      expect(validateShares(1e15)).toBe(true); // at limit
+      expect(validateShares(1e15 + 1)).toBe(false); // above limit
+      expect(validateShares(1e16)).toBe(false);
+    });
   });
 
   describe('validatePrice', () => {
@@ -45,6 +57,18 @@ describe('validation', () => {
       expect(validatePrice(0)).toBe(false);
       expect(validatePrice(-1)).toBe(false);
       expect(validatePrice(NaN)).toBe(false);
+    });
+
+    it('should reject Infinity', () => {
+      expect(validatePrice(Infinity)).toBe(false);
+      expect(validatePrice(-Infinity)).toBe(false);
+      expect(validatePrice(parseFloat('1e999'))).toBe(false); // becomes Infinity
+    });
+
+    it('should reject values above upper bound', () => {
+      expect(validatePrice(1e15)).toBe(true); // at limit
+      expect(validatePrice(1e15 + 1)).toBe(false); // above limit
+      expect(validatePrice(1e16)).toBe(false);
     });
   });
 
