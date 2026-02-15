@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
 import type { AppState, Portfolio, Stock, PriceCache } from '../types';
+import { encrypt } from '../utils/crypto';
 
 // Custom IndexedDB storage for Zustand persist
 const storage = createJSONStorage<AppState>(() => ({
@@ -17,8 +18,11 @@ const storage = createJSONStorage<AppState>(() => ({
   },
 }));
 
-// Generate unique ID
+// Generate unique ID using crypto.randomUUID() with fallback
 function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
@@ -146,7 +150,8 @@ export const usePortfolioStore = create<AppState>()(
 
       // API & prices
       setApiKey: (key: string) => {
-        set({ apiKey: key });
+        const encrypted = encrypt(key);
+        set({ apiKey: encrypted });
       },
 
       updatePrices: (prices: Record<string, number>) => {

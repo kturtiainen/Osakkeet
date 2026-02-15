@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
+import { useDialog } from '../hooks/useDialog';
+import { Dialog } from './Dialog';
 
 export function PortfolioTabs() {
   const portfolios = usePortfolioStore((state) => state.portfolios);
@@ -13,6 +15,7 @@ export function PortfolioTabs() {
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const { dialog, showDialog, handleConfirm, handleCancel } = useDialog();
 
   const handleAddPortfolio = () => {
     if (newName.trim()) {
@@ -30,9 +33,16 @@ export function PortfolioTabs() {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (portfolios.length > 1) {
-      if (confirm('Haluatko varmasti poistaa tämän salkun?')) {
+      const confirmed = await showDialog({
+        title: 'Vahvista poisto',
+        message: 'Haluatko varmasti poistaa tämän salkun?',
+        confirmText: 'Poista',
+        cancelText: 'Peruuta',
+        type: 'warning',
+      });
+      if (confirmed) {
         removePortfolio(id);
       }
     }
@@ -91,7 +101,9 @@ export function PortfolioTabs() {
                   </button>
                   {portfolios.length > 1 && (
                     <button
-                      onClick={() => handleDelete(portfolio.id)}
+                      onClick={() => {
+                        void handleDelete(portfolio.id);
+                      }}
                       className="text-xs hover:text-red-400"
                       title="Poista"
                     >
@@ -134,6 +146,18 @@ export function PortfolioTabs() {
           </button>
         )}
       </div>
+
+      {/* Dialog Component */}
+      <Dialog
+        isOpen={dialog.isOpen}
+        title={dialog.title}
+        message={dialog.message}
+        confirmText={dialog.confirmText}
+        cancelText={dialog.cancelText}
+        type={dialog.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

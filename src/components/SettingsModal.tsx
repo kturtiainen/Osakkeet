@@ -1,7 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { AddStockForm } from './AddStockForm';
 import { StockList } from './StockList';
+import { decrypt } from '../utils/crypto';
+import { exportData, importData } from '../utils/data';
+import { useDialog } from '../hooks/useDialog';
+import { Dialog } from './Dialog';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -16,8 +20,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const portfolios = usePortfolioStore((state) => state.portfolios);
   const activePortfolioId = usePortfolioStore((state) => state.activePortfolioId);
 
-  const [apiKeyInput, setApiKeyInput] = useState(apiKey);
+  const [apiKeyInput, setApiKeyInput] = useState('');
   const [activeTab, setActiveTab] = useState<'api' | 'stocks' | 'export'>('api');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { dialog, showDialog, handleConfirm, handleCancel } = useDialog();
+
+  // Decrypt API key when modal opens
+  useEffect(() => {
+    if (isOpen && apiKey) {
+      setApiKeyInput(decrypt(apiKey));
+    }
+  }, [isOpen, apiKey]);
 
   const activePortfolio = useMemo(
     () => portfolios.find((p) => p.id === activePortfolioId),
@@ -26,46 +39,45 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   if (!isOpen) return null;
 
-  const handleSaveApiKey = () => {
-    setApiKey(apiKeyInput.trim());
-    alert('API-avain tallennettu!');
+  const handleSaveApiKey = async () => {
+    setIsProcessing(true);
+    try {
+      setApiKey(apiKeyInput.trim());
+      await showDialog({
+        title: 'Tallennettu',
+        message: 'API-avain tallennettu!',
+        confirmText: 'OK',
+        type: 'info',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleExportApiKey = () => {
-    const data = { apiKey };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'osakesalkku-api-key.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    const data = { apiKey: decrypt(apiKey) };
+    exportData(data, 'osakesalkku-api-key.json');
   };
 
-  const handleImportApiKey = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          if (data.apiKey) {
-            setApiKeyInput(data.apiKey);
-            setApiKey(data.apiKey);
-            alert('API-avain tuotu onnistuneesti!');
-          }
-        } catch {
-          alert('Virhe tiedoston lukemisessa');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+  const handleImportApiKey = async () => {
+    const data = await importData<{ apiKey?: string }>();
+    if (data?.apiKey) {
+      setApiKeyInput(data.apiKey);
+      setApiKey(data.apiKey);
+      await showDialog({
+        title: 'Tuotu onnistuneesti',
+        message: 'API-avain tuotu onnistuneesti!',
+        confirmText: 'OK',
+        type: 'info',
+      });
+    } else if (data !== null) {
+      await showDialog({
+        title: 'Virhe',
+        message: 'Virhe tiedoston lukemisessa',
+        confirmText: 'OK',
+        type: 'error',
+      });
+    }
   };
 
   const handleExportPortfolio = () => {
@@ -75,45 +87,34 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       portfolio: activePortfolio,
       exportDate: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `salkku-${activePortfolio.name.toLowerCase().replace(/\s+/g, '-')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportData(data, `salkku-${activePortfolio.name.toLowerCase().replace(/\s+/g, '-')}.json`);
   };
 
-  const handleImportPortfolio = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          if (data.portfolio?.stocks) {
-            // Import stocks from the portfolio
-            data.portfolio.stocks.forEach((stock: { symbol: string; shares: number; purchasePrice: number }) => {
-              addStock({
-                symbol: stock.symbol,
-                shares: stock.shares,
-                purchasePrice: stock.purchasePrice,
-              });
-            });
-            alert('Salkku tuotu onnistuneesti!');
-          }
-        } catch {
-          alert('Virhe tiedoston lukemisessa');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+  const handleImportPortfolio = async () => {
+    const data = await importData<{ portfolio?: { stocks?: Array<{ symbol: string; shares: number; purchasePrice: number }> } }>();
+    if (data?.portfolio?.stocks) {
+      // Import stocks from the portfolio
+      data.portfolio.stocks.forEach((stock) => {
+        addStock({
+          symbol: stock.symbol,
+          shares: stock.shares,
+          purchasePrice: stock.purchasePrice,
+        });
+      });
+      await showDialog({
+        title: 'Tuotu onnistuneesti',
+        message: 'Salkku tuotu onnistuneesti!',
+        confirmText: 'OK',
+        type: 'info',
+      });
+    } else if (data !== null) {
+      await showDialog({
+        title: 'Virhe',
+        message: 'Virhe tiedoston lukemisessa',
+        confirmText: 'OK',
+        type: 'error',
+      });
+    }
   };
 
   const handleAddStock = (symbol: string, shares: number, purchasePrice: number) => {
@@ -201,23 +202,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               <button
-                onClick={handleSaveApiKey}
+                onClick={() => {
+                  void handleSaveApiKey();
+                }}
+                disabled={isProcessing}
                 className="w-full px-6 py-3 bg-gradient-purple-pink text-white rounded-lg font-semibold
-                           hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
+                           hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300
+                           disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                💾 Tallenna API-avain
+                {isProcessing ? '💾 Tallennetaan...' : '💾 Tallenna API-avain'}
               </button>
 
               <div className="flex gap-2">
                 <button
-                  onClick={handleExportApiKey}
+                  onClick={() => {
+                    void handleExportApiKey();
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg
                              transition-colors"
                 >
                   📤 Vie JSON
                 </button>
                 <button
-                  onClick={handleImportApiKey}
+                  onClick={() => {
+                    void handleImportApiKey();
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg
                              transition-colors"
                 >
@@ -260,14 +269,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={handleExportPortfolio}
+                    onClick={() => {
+                      void handleExportPortfolio();
+                    }}
                     className="px-6 py-3 bg-gradient-purple-pink text-white rounded-lg font-semibold
                                hover:shadow-lg hover:shadow-purple-500/50 transition-all duration-300"
                   >
                     💾 Vie salkku
                   </button>
                   <button
-                    onClick={handleImportPortfolio}
+                    onClick={() => {
+                      void handleImportPortfolio();
+                    }}
                     className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-semibold
                                transition-colors"
                   >
@@ -286,6 +299,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
         </div>
       </div>
+
+      {/* Dialog Component */}
+      <Dialog
+        isOpen={dialog.isOpen}
+        title={dialog.title}
+        message={dialog.message}
+        confirmText={dialog.confirmText}
+        cancelText={dialog.cancelText}
+        type={dialog.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
