@@ -186,15 +186,51 @@ export const usePortfolioStore = create<AppState>()(
       },
 
       updateStockNames: (names: Record<string, string>) => {
-        set((state) => ({
-          portfolios: state.portfolios.map((portfolio) => ({
-            ...portfolio,
-            stocks: portfolio.stocks.map((stock) => ({
-              ...stock,
-              name: names[stock.symbol] ?? stock.name,
-            })),
-          })),
-        }));
+        // If no names provided, avoid triggering unnecessary updates
+        if (!names || Object.keys(names).length === 0) {
+          return;
+        }
+
+        set((state) => {
+          let hasChanges = false;
+
+          const updatedPortfolios = state.portfolios.map((portfolio) => {
+            let portfolioChanged = false;
+
+            const updatedStocks = portfolio.stocks.map((stock) => {
+              const newName = names[stock.symbol];
+              if (newName === undefined || newName === stock.name) {
+                return stock;
+              }
+
+              hasChanges = true;
+              portfolioChanged = true;
+              return {
+                ...stock,
+                name: newName,
+              };
+            });
+
+            if (!portfolioChanged) {
+              return portfolio;
+            }
+
+            return {
+              ...portfolio,
+              stocks: updatedStocks,
+            };
+          });
+
+          // If nothing actually changed, return the original state to avoid a re-render
+          if (!hasChanges) {
+            return state;
+          }
+
+          return {
+            ...state,
+            portfolios: updatedPortfolios,
+          };
+        });
       },
 
       setLastRefreshDate: (date: string) => {
