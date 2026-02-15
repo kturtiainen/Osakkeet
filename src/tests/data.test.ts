@@ -1,11 +1,4 @@
-import { describe, it, expect } from 'vitest';
-
-describe('data utilities', () => {
-  describe('exportData', () => {
-    it('should be a function', () => {
-      // Note: exportData uses document.createElement which is not available in test environment
-      // This would require DOM mocking or browser environment testing
-      expect(true).toBe(true);
-    });
-  });
-});
+// Tests for data utilities have been intentionally omitted here because they
+// require a DOM-capable environment (e.g., happy-dom or jsdom configured in Vitest).
+// This placeholder test file previously contained a non-functional test
+// (expect(true).toBe(true)), which has been removed to avoid misleading coverage.
