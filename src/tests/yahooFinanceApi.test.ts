@@ -16,7 +16,13 @@ describe('yahooFinanceApi', () => {
 
     it('should return empty prices and names for empty symbols array', async () => {
       const result = await fetchQuotes([], 'test-api-key');
-      expect(result).toEqual({ prices: {}, names: {} });
+      expect(result).toEqual({ 
+        prices: {}, 
+        names: {},
+        changes: {},
+        changePercents: {},
+        currencies: {}
+      });
     });
 
     it('should fetch quotes for single batch (≤10 symbols)', async () => {
@@ -48,7 +54,10 @@ describe('yahooFinanceApi', () => {
           AAPL: 'Apple',
           GOOGL: 'Alphabet Inc.',
           MSFT: 'Microsoft'
-        }
+        },
+        changes: {},
+        changePercents: {},
+        currencies: {}
       });
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
@@ -369,6 +378,85 @@ describe('yahooFinanceApi', () => {
       });
       // TSLA should not be in names since it has no name field
       expect(result.names.TSLA).toBeUndefined();
+    });
+
+    it('should extract daily change data when available', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { 
+              symbol: 'AAPL', 
+              regularMarketPrice: 150.00, 
+              regularMarketChange: 4.50,
+              regularMarketChangePercent: 3.09,
+              currency: 'USD',
+              displayName: 'Apple'
+            },
+            { 
+              symbol: 'NOKIA.HE', 
+              regularMarketPrice: 4.75, 
+              regularMarketChange: 0.12,
+              regularMarketChangePercent: 2.60,
+              currency: 'EUR',
+              displayName: 'Nokia'
+            }
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL', 'NOKIA.HE'], 'test-api-key');
+      
+      expect(result.prices).toEqual({
+        AAPL: 150.00,
+        'NOKIA.HE': 4.75
+      });
+      expect(result.changes).toEqual({
+        AAPL: 4.50,
+        'NOKIA.HE': 0.12
+      });
+      expect(result.changePercents).toEqual({
+        AAPL: 3.09,
+        'NOKIA.HE': 2.60
+      });
+      expect(result.currencies).toEqual({
+        AAPL: 'USD',
+        'NOKIA.HE': 'EUR'
+      });
+    });
+
+    it('should handle missing daily change data gracefully', async () => {
+      const mockResponse = {
+        quoteResponse: {
+          result: [
+            { 
+              symbol: 'AAPL', 
+              regularMarketPrice: 150.00,
+              displayName: 'Apple'
+              // No change data or currency
+            }
+          ],
+          error: null
+        }
+      };
+
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await fetchQuotes(['AAPL'], 'test-api-key');
+      
+      expect(result.prices).toEqual({ AAPL: 150.00 });
+      expect(result.names).toEqual({ AAPL: 'Apple' });
+      expect(result.changes).toEqual({});
+      expect(result.changePercents).toEqual({});
+      expect(result.currencies).toEqual({});
     });
   });
 });

@@ -4,6 +4,11 @@ export interface Stock {
   shares: number;
   purchasePrice: number;
   currentPrice: number;
+  
+  // Daily change information (optional for backward compatibility)
+  priceChange?: number;           // Daily change in EUR/USD
+  priceChangePercent?: number;    // Daily change as percentage
+  currency?: string;              // Currency (USD, EUR, SEK, etc.)
 }
 
 export interface Portfolio {
@@ -16,6 +21,9 @@ export interface Portfolio {
 export interface PriceCache {
   data: Record<string, number>;
   names?: Record<string, string>;
+  changes?: Record<string, number>;           // Daily price changes
+  changePercents?: Record<string, number>;    // Daily percentage changes
+  currencies?: Record<string, string>;        // Currencies
   timestamp: number;
 }
 
@@ -41,6 +49,9 @@ export interface AppState {
   setApiKey: (key: string) => void;
   updatePrices: (prices: Record<string, number>) => void;
   updateStockNames: (names: Record<string, string>) => void;
+  updateStockChanges: (changes: Record<string, number>) => void;
+  updateStockChangePercents: (changePercents: Record<string, number>) => void;
+  updateStockCurrencies: (currencies: Record<string, string>) => void;
   setLastRefreshDate: (date: string) => void;
   setPriceCache: (cache: PriceCache) => void;
 }

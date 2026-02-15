@@ -233,6 +233,42 @@ export const usePortfolioStore = create<AppState>()(
         });
       },
 
+      updateStockChanges: (changes: Record<string, number>) => {
+        set((state) => ({
+          portfolios: state.portfolios.map((portfolio) => ({
+            ...portfolio,
+            stocks: portfolio.stocks.map((stock) => ({
+              ...stock,
+              priceChange: changes[stock.symbol] ?? stock.priceChange,
+            })),
+          })),
+        }));
+      },
+
+      updateStockChangePercents: (changePercents: Record<string, number>) => {
+        set((state) => ({
+          portfolios: state.portfolios.map((portfolio) => ({
+            ...portfolio,
+            stocks: portfolio.stocks.map((stock) => ({
+              ...stock,
+              priceChangePercent: changePercents[stock.symbol] ?? stock.priceChangePercent,
+            })),
+          })),
+        }));
+      },
+
+      updateStockCurrencies: (currencies: Record<string, string>) => {
+        set((state) => ({
+          portfolios: state.portfolios.map((portfolio) => ({
+            ...portfolio,
+            stocks: portfolio.stocks.map((stock) => ({
+              ...stock,
+              currency: currencies[stock.symbol] ?? stock.currency,
+            })),
+          })),
+        }));
+      },
+
       setLastRefreshDate: (date: string) => {
         set({ lastRefreshDate: date });
       },

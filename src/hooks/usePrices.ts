@@ -22,6 +22,9 @@ export function usePrices() {
 
   const updatePrices = usePortfolioStore((state) => state.updatePrices);
   const updateStockNames = usePortfolioStore((state) => state.updateStockNames);
+  const updateStockChanges = usePortfolioStore((state) => state.updateStockChanges);
+  const updateStockChangePercents = usePortfolioStore((state) => state.updateStockChangePercents);
+  const updateStockCurrencies = usePortfolioStore((state) => state.updateStockCurrencies);
   const setPriceCache = usePortfolioStore((state) => state.setPriceCache);
   const setLastRefreshDate = usePortfolioStore((state) => state.setLastRefreshDate);
 
@@ -56,9 +59,26 @@ export function usePrices() {
 
     try {
       const result = await fetchQuotes(Array.from(allSymbols), decryptedKey);
+      
+      // Update prices and names
       updatePrices(result.prices);
       updateStockNames(result.names);
-      setPriceCache({ data: result.prices, names: result.names, timestamp: Date.now() });
+      
+      // Update daily change data
+      updateStockChanges(result.changes);
+      updateStockChangePercents(result.changePercents);
+      updateStockCurrencies(result.currencies);
+      
+      // Update cache with all new fields
+      setPriceCache({ 
+        data: result.prices, 
+        names: result.names,
+        changes: result.changes,
+        changePercents: result.changePercents,
+        currencies: result.currencies,
+        timestamp: Date.now() 
+      });
+      
       setLastRefreshDate(getHelsinkiDate());
       return true;
     } catch (err) {
@@ -70,13 +90,22 @@ export function usePrices() {
         if (priceCache.names) {
           updateStockNames(priceCache.names);
         }
+        if (priceCache.changes) {
+          updateStockChanges(priceCache.changes);
+        }
+        if (priceCache.changePercents) {
+          updateStockChangePercents(priceCache.changePercents);
+        }
+        if (priceCache.currencies) {
+          updateStockCurrencies(priceCache.currencies);
+        }
       }
       return false;
     } finally {
       setIsLoading(false);
       isRefreshingRef.current = false;
     }
-  }, [updatePrices, updateStockNames, setPriceCache, setLastRefreshDate]);
+  }, [updatePrices, updateStockNames, updateStockChanges, updateStockChangePercents, updateStockCurrencies, setPriceCache, setLastRefreshDate]);
 
   return {
     isLoading,
