@@ -84,7 +84,7 @@ export function StockCard({ stock }: StockCardProps) {
           <div>
             <div className="text-xs text-gray-500 mb-1">Osakkeita</div>
             <div className="text-lg font-semibold text-white">
-              {formatNumber(Math.floor(stock.shares ?? 0))}
+              {formatNumber(stock.shares)}
             </div>
           </div>
 
