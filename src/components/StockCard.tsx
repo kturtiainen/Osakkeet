@@ -28,6 +28,8 @@ export function StockCard({ stock }: StockCardProps) {
   // Daily change data
   const hasDailyChange = stock.priceChange !== undefined && stock.priceChangePercent !== undefined;
   const isDailyPositive = (stock.priceChange ?? 0) >= 0;
+  // Note: daily change uses lighter text colors (green/red-400) than overall profit (green/red-500 via formatPercentage)
+  // to visually distinguish intraday movement from total performance.
   const dailyChangeColor = isDailyPositive ? 'text-green-400' : 'text-red-400';
   const dailyChangeBgColor = isDailyPositive ? 'bg-green-500/20 border-green-500/30' : 'bg-red-500/20 border-red-500/30';
   const dailyChangeIcon = isDailyPositive ? '▲' : '▼';
