@@ -25,10 +25,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { dialog, showDialog, handleConfirm, handleCancel } = useDialog();
 
-  // Decrypt API key when modal opens
+  // Sync API key input with saved value when modal opens or closes
   useEffect(() => {
-    if (isOpen && apiKey) {
+    // When the modal is closed, clear the input to discard any unsaved edits
+    if (!isOpen) {
+      setApiKeyInput('');
+      return;
+    }
+
+    // When the modal is opened, show the saved API key (if any)
+    if (apiKey) {
       setApiKeyInput(decrypt(apiKey));
+    } else {
+      setApiKeyInput('');
     }
   }, [isOpen, apiKey]);
 
