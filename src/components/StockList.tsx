@@ -34,8 +34,8 @@ export function StockList({ onDelete }: StockListProps) {
           className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg
                      border border-gray-700/50 hover:border-gray-600 transition-colors"
         >
-          <div className="flex-1">
-            <div className="font-semibold text-white">
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-white truncate">
               {stock.name || stock.symbol}
             </div>
             <div className="text-sm text-gray-400">
