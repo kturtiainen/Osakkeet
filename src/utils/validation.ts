@@ -22,19 +22,23 @@ export function validateSymbol(symbol: string): boolean {
 /**
  * Validate number of shares
  * @param shares - Number of shares
- * @returns True if valid (> 0), false otherwise
+ * @returns True if valid (finite number > 0), false otherwise
  */
 export function validateShares(shares: number): boolean {
-  return !isNaN(shares) && shares > 0;
+  // Use Number.isFinite() to reject NaN, Infinity, and -Infinity
+  // Also add reasonable upper bound to prevent absurd values
+  return Number.isFinite(shares) && shares > 0 && shares <= 1e15;
 }
 
 /**
  * Validate stock price
  * @param price - Stock price
- * @returns True if valid (> 0), false otherwise
+ * @returns True if valid (finite number > 0), false otherwise
  */
 export function validatePrice(price: number): boolean {
-  return !isNaN(price) && price > 0;
+  // Use Number.isFinite() to reject NaN, Infinity, and -Infinity
+  // Also add reasonable upper bound (1 quadrillion EUR per share)
+  return Number.isFinite(price) && price > 0 && price <= 1e15;
 }
 
 /**
@@ -70,14 +74,14 @@ export function validateStock(
   if (!validateShares(shares)) {
     return {
       valid: false,
-      error: 'Osakkeiden määrän on oltava suurempi kuin 0'
+      error: 'Osakkeiden määrän on oltava suurempi kuin 0 ja enintään 1000000000000000'
     };
   }
   
   if (!validatePrice(purchasePrice)) {
     return {
       valid: false,
-      error: 'Hankintahinnan on oltava suurempi kuin 0'
+      error: 'Hankintahinnan on oltava suurempi kuin 0 ja enintään 1000000000000000'
     };
   }
   
