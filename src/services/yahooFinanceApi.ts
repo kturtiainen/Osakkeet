@@ -23,6 +23,7 @@ interface YahooQuoteResponse {
     result: Array<{
       symbol: string;
       regularMarketPrice?: number;
+      displayName?: string;
     }>;
     error: null | string;
   };
@@ -32,13 +33,13 @@ interface YahooQuoteResponse {
  * Helper function to fetch a single batch of quotes
  * @param symbols - Array of stock symbols to fetch (max 10)
  * @param apiKey - API key for yfapi.net
- * @returns Record mapping symbol to current price
+ * @returns Object with prices and names records
  * @throws Error if API request fails
  */
 async function fetchBatch(
   symbols: string[],
   apiKey: string
-): Promise<Record<string, number>> {
+): Promise<{ prices: Record<string, number>; names: Record<string, string> }> {
   const ticker = symbols.join(',');
   const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?region=US&symbols=${encodeURIComponent(ticker)}`;
   
@@ -70,15 +71,19 @@ async function fetchBatch(
       throw new Error(`API-virhe: ${data.quoteResponse.error}`);
     }
 
-    // Map symbols to prices
+    // Map symbols to prices and names
     const priceMap: Record<string, number> = {};
+    const nameMap: Record<string, string> = {};
     for (const quote of data.quoteResponse.result) {
       if (quote.symbol && typeof quote.regularMarketPrice === 'number') {
         priceMap[quote.symbol] = quote.regularMarketPrice;
       }
+      if (quote.symbol && quote.displayName) {
+        nameMap[quote.symbol] = quote.displayName;
+      }
     }
 
-    return priceMap;
+    return { prices: priceMap, names: nameMap };
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'TimeoutError' || error.name === 'AbortError') {
@@ -95,19 +100,19 @@ async function fetchBatch(
  * Automatically splits large requests into batches of 10 symbols
  * @param symbols - Array of stock symbols to fetch
  * @param apiKey - API key for yfapi.net
- * @returns Record mapping symbol to current price
+ * @returns Object with prices and names records
  * @throws Error if all batch requests fail
  */
 export async function fetchQuotes(
   symbols: string[],
   apiKey: string
-): Promise<Record<string, number>> {
+): Promise<{ prices: Record<string, number>; names: Record<string, string> }> {
   if (!apiKey || apiKey.trim().length === 0) {
     throw new Error('API-avain puuttuu');
   }
 
   if (symbols.length === 0) {
-    return {};
+    return { prices: {}, names: {} };
   }
 
   // Deduplicate symbols
@@ -125,12 +130,14 @@ export async function fetchQuotes(
   
   // Combine results from all successful batches
   const priceMap: Record<string, number> = {};
+  const nameMap: Record<string, string> = {};
   const errors: string[] = [];
   
   for (let i = 0; i < batchResults.length; i++) {
     const result = batchResults[i];
     if (result.status === 'fulfilled') {
-      Object.assign(priceMap, result.value);
+      Object.assign(priceMap, result.value.prices);
+      Object.assign(nameMap, result.value.names);
     } else {
       const errorMessage = result.reason instanceof Error ? result.reason.message : String(result.reason);
       errors.push(`Erä ${String(i + 1)}/${String(batches.length)} epäonnistui: ${errorMessage}`);
@@ -147,5 +154,5 @@ export async function fetchQuotes(
     console.warn('Osittainen virhe hintojen haussa:', errors);
   }
   
-  return priceMap;
+  return { prices: priceMap, names: nameMap };
 }

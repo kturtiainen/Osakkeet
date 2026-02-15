@@ -1,5 +1,6 @@
 export interface Stock {
   symbol: string;
+  name?: string;
   shares: number;
   purchasePrice: number;
   currentPrice: number;
@@ -14,6 +15,7 @@ export interface Portfolio {
 
 export interface PriceCache {
   data: Record<string, number>;
+  names?: Record<string, string>;
   timestamp: number;
 }
 
@@ -38,6 +40,7 @@ export interface AppState {
   // API & prices
   setApiKey: (key: string) => void;
   updatePrices: (prices: Record<string, number>) => void;
+  updateStockNames: (names: Record<string, string>) => void;
   setLastRefreshDate: (date: string) => void;
   setPriceCache: (cache: PriceCache) => void;
 }
