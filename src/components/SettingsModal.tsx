@@ -143,9 +143,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         let errorReason = 'Tuntematon virhe';
         if (!stock.symbol || stock.symbol.length === 0) {
           errorReason = 'Puuttuva symboli';
-        } else if (typeof stock.shares !== 'number' || stock.shares <= 0) {
+        } else if (typeof stock.shares !== 'number' || Number.isNaN(stock.shares) || stock.shares <= 0) {
           errorReason = 'Virheellinen osakkeiden määrä';
-        } else if (typeof stock.purchasePrice !== 'number' || stock.purchasePrice <= 0) {
+        } else if (typeof stock.purchasePrice !== 'number' || Number.isNaN(stock.purchasePrice) || stock.purchasePrice <= 0) {
           errorReason = 'Virheellinen hankintahinta';
         }
         failedStocks.push({ symbol: stock.symbol || 'Tuntematon', errorReason });
