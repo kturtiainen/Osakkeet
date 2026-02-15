@@ -29,8 +29,45 @@ export function getHelsinkiTime(): { hours: number; minutes: number } {
   const hourPart = parts.find(p => p.type === 'hour');
   const minutePart = parts.find(p => p.type === 'minute');
   
-  const hours = hourPart ? Number(hourPart.value) : 0;
-  const minutes = minutePart ? Number(minutePart.value) : 0;
+  let hours = 0;
+  if (hourPart) {
+    const parsedHour = Number(hourPart.value);
+    if (!Number.isNaN(parsedHour)) {
+      hours = parsedHour;
+    } else {
+      // Log invalid hour part while falling back to default value
+      console.error(
+        'getHelsinkiTime: Invalid hour part from Intl.DateTimeFormat, falling back to 0.',
+        { hourPart }
+      );
+    }
+  } else {
+    // Log missing hour part while falling back to default value
+    console.error(
+      'getHelsinkiTime: Missing hour part from Intl.DateTimeFormat, falling back to 0.',
+      { parts }
+    );
+  }
+
+  let minutes = 0;
+  if (minutePart) {
+    const parsedMinute = Number(minutePart.value);
+    if (!Number.isNaN(parsedMinute)) {
+      minutes = parsedMinute;
+    } else {
+      // Log invalid minute part while falling back to default value
+      console.error(
+        'getHelsinkiTime: Invalid minute part from Intl.DateTimeFormat, falling back to 0.',
+        { minutePart }
+      );
+    }
+  } else {
+    // Log missing minute part while falling back to default value
+    console.error(
+      'getHelsinkiTime: Missing minute part from Intl.DateTimeFormat, falling back to 0.',
+      { parts }
+    );
+  }
   
   return { hours, minutes };
 }
