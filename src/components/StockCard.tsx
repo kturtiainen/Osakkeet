@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Stock } from '../types';
-import { formatCurrency, formatNumber, formatPercentage } from '../utils/format';
+import { formatNumber, formatPercentage } from '../utils/format';
 
 interface StockCardProps {
   stock: Stock;
@@ -23,8 +23,15 @@ export function StockCard({ stock }: StockCardProps) {
     };
   }, [stock]);
 
-  const changeData = formatPercentage(stats.priceChange);
   const profitData = formatPercentage(stats.profitPercentage);
+  
+  // Daily change data
+  const hasDailyChange = stock.priceChange !== undefined && stock.priceChangePercent !== undefined;
+  const isDailyPositive = (stock.priceChange ?? 0) >= 0;
+  const dailyChangeColor = isDailyPositive ? 'text-green-400' : 'text-red-400';
+  const dailyChangeBgColor = isDailyPositive ? 'bg-green-500/20 border-green-500/30' : 'bg-red-500/20 border-red-500/30';
+  const dailyChangeIcon = isDailyPositive ? '▲' : '▼';
+  const currency = stock.currency || 'EUR';
 
   return (
     <div className="relative overflow-hidden bg-gray-900/50 backdrop-blur-sm rounded-lg border border-gray-800 hover:border-gray-700 transition-all duration-300 group">
@@ -32,7 +39,7 @@ export function StockCard({ stock }: StockCardProps) {
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-pink-500" />
       
       <div className="p-5 pl-6">
-        {/* Header with symbol and change badge */}
+        {/* Header with symbol and daily change badge */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-bold bg-gradient-purple-pink bg-clip-text text-transparent truncate">
@@ -42,53 +49,61 @@ export function StockCard({ stock }: StockCardProps) {
               <p className="text-xs text-gray-500 mt-0.5">{stock.symbol}</p>
             )}
           </div>
-          <span
-            className={`
-              flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-semibold
-              ${
-                stats.priceChange >= 0
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
-              }
-            `}
-          >
-            {changeData.text}
-          </span>
+          
+          {/* Daily change badge */}
+          {hasDailyChange && (
+            <span
+              className={`
+                flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-semibold border
+                ${dailyChangeBgColor} ${dailyChangeColor}
+              `}
+            >
+              {dailyChangeIcon} {Math.abs(stock.priceChangePercent!).toFixed(2)}%
+            </span>
+          )}
+        </div>
+
+        {/* Price and daily change */}
+        <div className="mb-4">
+          <div className="text-3xl font-bold text-white mb-1">
+            {stock.currentPrice.toFixed(2)} {currency}
+          </div>
+          
+          {/* Daily change in currency */}
+          {hasDailyChange && (
+            <div className={`text-sm font-medium ${dailyChangeColor}`}>
+              {isDailyPositive ? '+' : ''}{stock.priceChange!.toFixed(2)} {currency} tänään
+            </div>
+          )}
         </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="text-xs text-gray-500 mb-1">Nykyinen hinta</div>
-            <div className="text-lg font-semibold text-white">
-              {formatCurrency(stock.currentPrice)}
-            </div>
-          </div>
-
           <div>
             <div className="text-xs text-gray-500 mb-1">Osakkeita</div>
             <div className="text-lg font-semibold text-white">
               {formatNumber(stock.shares)}
             </div>
           </div>
+
           <div>
             <div className="text-xs text-gray-500 mb-1">Hankintahinta</div>
             <div className="text-lg font-semibold text-white">
-              {formatCurrency(stock.purchasePrice)}
+              {stock.purchasePrice.toFixed(2)} {currency}
             </div>
           </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-1">Arvo yhteensä</div>
             <div className="text-lg font-semibold text-white">
-              {formatCurrency(stats.totalValue)}
+              {stats.totalValue.toFixed(2)} {currency}
             </div>
           </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-1">Tuotto</div>
             <div className={`text-lg font-semibold ${profitData.colorClass}`}>
-              {formatCurrency(stats.profit)}
+              {stats.profit >= 0 ? '+' : ''}{stats.profit.toFixed(2)} {currency}
             </div>
             <div className={`text-xs ${profitData.colorClass}`}>
               {profitData.text}

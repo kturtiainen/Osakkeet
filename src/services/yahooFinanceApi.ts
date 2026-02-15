@@ -23,6 +23,9 @@ interface YahooQuoteResponse {
     result: Array<{
       symbol: string;
       regularMarketPrice?: number;
+      regularMarketChange?: number;          // Daily change in currency
+      regularMarketChangePercent?: number;   // Daily change as percentage
+      currency?: string;                     // Currency (USD, EUR, SEK, etc.)
       displayName?: string;
       shortName?: string;
       longName?: string;
@@ -35,13 +38,19 @@ interface YahooQuoteResponse {
  * Helper function to fetch a single batch of quotes
  * @param symbols - Array of stock symbols to fetch (max 10)
  * @param apiKey - API key for yfapi.net
- * @returns Object with prices and names records
+ * @returns Object with prices, names, changes, changePercents, and currencies records
  * @throws Error if API request fails
  */
 async function fetchBatch(
   symbols: string[],
   apiKey: string
-): Promise<{ prices: Record<string, number>; names: Record<string, string> }> {
+): Promise<{ 
+  prices: Record<string, number>; 
+  names: Record<string, string>;
+  changes: Record<string, number>;
+  changePercents: Record<string, number>;
+  currencies: Record<string, string>;
+}> {
   const ticker = symbols.join(',');
   const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?region=US&symbols=${encodeURIComponent(ticker)}`;
   
@@ -76,9 +85,24 @@ async function fetchBatch(
     // Map symbols to prices and names
     const priceMap: Record<string, number> = {};
     const nameMap: Record<string, string> = {};
+    const changeMap: Record<string, number> = {};
+    const changePercentMap: Record<string, number> = {};
+    const currencyMap: Record<string, string> = {};
+    
     for (const quote of data.quoteResponse.result) {
       if (quote.symbol && typeof quote.regularMarketPrice === 'number') {
         priceMap[quote.symbol] = quote.regularMarketPrice;
+        
+        // Store daily change data
+        if (typeof quote.regularMarketChange === 'number') {
+          changeMap[quote.symbol] = quote.regularMarketChange;
+        }
+        if (typeof quote.regularMarketChangePercent === 'number') {
+          changePercentMap[quote.symbol] = quote.regularMarketChangePercent;
+        }
+        if (quote.currency) {
+          currencyMap[quote.symbol] = quote.currency;
+        }
       }
       
       // Try multiple name fields with priority order
@@ -90,7 +114,13 @@ async function fetchBatch(
       }
     }
 
-    return { prices: priceMap, names: nameMap };
+    return { 
+      prices: priceMap, 
+      names: nameMap,
+      changes: changeMap,
+      changePercents: changePercentMap,
+      currencies: currencyMap
+    };
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'TimeoutError' || error.name === 'AbortError') {
@@ -107,19 +137,31 @@ async function fetchBatch(
  * Automatically splits large requests into batches of 10 symbols
  * @param symbols - Array of stock symbols to fetch
  * @param apiKey - API key for yfapi.net
- * @returns Object with prices and names records
+ * @returns Object with prices, names, changes, changePercents, and currencies records
  * @throws Error if all batch requests fail
  */
 export async function fetchQuotes(
   symbols: string[],
   apiKey: string
-): Promise<{ prices: Record<string, number>; names: Record<string, string> }> {
+): Promise<{ 
+  prices: Record<string, number>; 
+  names: Record<string, string>;
+  changes: Record<string, number>;
+  changePercents: Record<string, number>;
+  currencies: Record<string, string>;
+}> {
   if (!apiKey || apiKey.trim().length === 0) {
     throw new Error('API-avain puuttuu');
   }
 
   if (symbols.length === 0) {
-    return { prices: {}, names: {} };
+    return { 
+      prices: {}, 
+      names: {},
+      changes: {},
+      changePercents: {},
+      currencies: {}
+    };
   }
 
   // Deduplicate symbols
@@ -138,6 +180,9 @@ export async function fetchQuotes(
   // Combine results from all successful batches
   const priceMap: Record<string, number> = {};
   const nameMap: Record<string, string> = {};
+  const changeMap: Record<string, number> = {};
+  const changePercentMap: Record<string, number> = {};
+  const currencyMap: Record<string, string> = {};
   const errors: string[] = [];
   
   for (let i = 0; i < batchResults.length; i++) {
@@ -145,6 +190,9 @@ export async function fetchQuotes(
     if (result.status === 'fulfilled') {
       Object.assign(priceMap, result.value.prices);
       Object.assign(nameMap, result.value.names);
+      Object.assign(changeMap, result.value.changes);
+      Object.assign(changePercentMap, result.value.changePercents);
+      Object.assign(currencyMap, result.value.currencies);
     } else {
       const errorMessage = result.reason instanceof Error ? result.reason.message : String(result.reason);
       errors.push(`Erä ${String(i + 1)}/${String(batches.length)} epäonnistui: ${errorMessage}`);
@@ -161,5 +209,11 @@ export async function fetchQuotes(
     console.warn('Osittainen virhe hintojen haussa:', errors);
   }
   
-  return { prices: priceMap, names: nameMap };
+  return { 
+    prices: priceMap, 
+    names: nameMap,
+    changes: changeMap,
+    changePercents: changePercentMap,
+    currencies: currencyMap
+  };
 }
