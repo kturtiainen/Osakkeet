@@ -22,8 +22,9 @@ describe('timezone', () => {
 
     it('should be at least 1 minute (safety check)', () => {
       const ms = msUntilNextRefresh();
-      // msUntilNextRefresh should return positive values
-      // The 1 hour minimum is enforced by useDailyRefresh, not this function
+      // Sanity check: msUntilNextRefresh should return a non-trivial positive delay
+      // This test only enforces a >= 1 minute lower bound for this helper;
+      // any stricter 1 hour minimum is the responsibility of useDailyRefresh.
       expect(ms).toBeGreaterThan(60 * 1000); // At least 1 minute
     });
 
