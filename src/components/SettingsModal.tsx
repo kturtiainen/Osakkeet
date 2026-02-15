@@ -185,7 +185,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       
       await showDialog({
         title: 'Osittain epäonnistunut',
-        message: `${String(successCount)} osaketta tuotu onnistuneesti. Seuraavat epäonnistuivat:\n${errorDetails}`,
+        message: `${successCount} osaketta tuotu onnistuneesti. Seuraavat epäonnistuivat:\n${errorDetails}`,
         confirmText: 'OK',
         type: 'warning',
       });
@@ -193,7 +193,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       // All successful
       await showDialog({
         title: 'Tuotu onnistuneesti',
-        message: `${String(successCount)} osaketta tuotu onnistuneesti!`,
+        message: `${successCount} osaketta tuotu onnistuneesti!`,
         confirmText: 'OK',
         type: 'info',
       });

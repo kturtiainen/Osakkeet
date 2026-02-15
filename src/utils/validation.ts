@@ -94,8 +94,10 @@ export function isValidStock(stock: { symbol?: string; shares?: number; purchase
     typeof stock.symbol === 'string' &&
     stock.symbol.length > 0 &&
     typeof stock.shares === 'number' &&
+    !Number.isNaN(stock.shares) &&
     stock.shares > 0 &&
     typeof stock.purchasePrice === 'number' &&
+    !Number.isNaN(stock.purchasePrice) &&
     stock.purchasePrice > 0
   );
 }
