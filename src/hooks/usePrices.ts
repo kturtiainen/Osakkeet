@@ -2,6 +2,17 @@ import { useState, useCallback, useRef } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { fetchQuotes } from '../services/yahooFinanceApi';
 import { getHelsinkiDate } from '../utils/timezone';
+import { decrypt } from '../utils/crypto';
+import type { PriceCache } from '../types';
+
+/**
+ * Check if price cache is still valid (less than 24 hours old)
+ */
+const isCacheValid = (cache: PriceCache | null): boolean => {
+  if (!cache) return false;
+  const age = Date.now() - cache.timestamp;
+  return age < 24 * 60 * 60 * 1000; // 24 hours
+};
 
 export function usePrices() {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +30,9 @@ export function usePrices() {
 
     const { apiKey, portfolios, priceCache } = usePortfolioStore.getState();
 
-    if (!apiKey) {
+    // Decrypt the API key before using it
+    const decryptedKey = decrypt(apiKey);
+    if (!decryptedKey) {
       setError('API-avain puuttuu');
       isRefreshingRef.current = false;
       return false;
@@ -41,7 +54,7 @@ export function usePrices() {
     setError(null);
 
     try {
-      const prices = await fetchQuotes(Array.from(allSymbols), apiKey);
+      const prices = await fetchQuotes(Array.from(allSymbols), decryptedKey);
       updatePrices(prices);
       setPriceCache({ data: prices, timestamp: Date.now() });
       setLastRefreshDate(getHelsinkiDate());
@@ -49,7 +62,8 @@ export function usePrices() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Tuntematon virhe';
       setError(errorMessage);
-      if (priceCache) {
+      // Use cached prices if valid, otherwise keep current prices
+      if (priceCache && isCacheValid(priceCache)) {
         updatePrices(priceCache.data);
       }
       return false;

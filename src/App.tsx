@@ -3,6 +3,7 @@ import { usePortfolioStore } from './store/portfolioStore';
 import { usePrices } from './hooks/usePrices';
 import { useDailyRefresh } from './hooks/useDailyRefresh';
 import { useStatus } from './hooks/useStatus';
+import { useDialog } from './hooks/useDialog';
 import { Header } from './components/Header';
 import { PortfolioTabs } from './components/PortfolioTabs';
 import { StockGrid } from './components/StockGrid';
@@ -10,6 +11,7 @@ import { EmptyState } from './components/EmptyState';
 import { FloatingButtons } from './components/FloatingButtons';
 import { SettingsModal } from './components/SettingsModal';
 import { StatusBar } from './components/StatusBar';
+import { Dialog } from './components/Dialog';
 
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -21,6 +23,7 @@ function App() {
 
   const { isLoading, refreshPrices } = usePrices();
   const { messages, showSuccess, showError, showWarning, removeMessage } = useStatus();
+  const { dialog, showDialog, handleConfirm, handleCancel } = useDialog();
 
   // Memoize the auto-refresh callback to prevent infinite re-renders
   const handleAutoRefresh = useCallback(() => {
@@ -47,11 +50,15 @@ function App() {
       return;
     }
 
-    const confirmed = confirm(
-      'Haluatko varmasti päivittää hinnat manuaalisesti?\n\n' +
-      'Huomio: Ilmainen API-taso on rajoitettu 100 pyyntöön/kuukausi.\n' +
-      'Automaattinen päivitys tapahtuu kerran päivässä klo 14:00 (ma-pe).'
-    );
+    const confirmed = await showDialog({
+      title: 'Vahvista päivitys',
+      message: 'Haluatko varmasti päivittää hinnat manuaalisesti?\n\n' +
+        'Huomio: Ilmainen API-taso on rajoitettu 100 pyyntöön/kuukausi.\n' +
+        'Automaattinen päivitys tapahtuu kerran päivässä klo 14:00 (ma-pe).',
+      confirmText: 'Kyllä, päivitä',
+      cancelText: 'Peruuta',
+      type: 'warning',
+    });
 
     if (!confirmed) return;
 
@@ -81,7 +88,9 @@ function App() {
       )}
 
       <FloatingButtons
-        onRefresh={handleRefresh}
+        onRefresh={() => {
+          void handleRefresh();
+        }}
         onSettings={() => setIsSettingsOpen(true)}
         isRefreshing={isLoading}
       />
@@ -89,6 +98,18 @@ function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* Dialog Component */}
+      <Dialog
+        isOpen={dialog.isOpen}
+        title={dialog.title}
+        message={dialog.message}
+        confirmText={dialog.confirmText}
+        cancelText={dialog.cancelText}
+        type={dialog.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
       />
     </div>
   );

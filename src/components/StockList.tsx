@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { formatCurrency } from '../utils/format';
+import { useDialog } from '../hooks/useDialog';
+import { Dialog } from './Dialog';
 
 interface StockListProps {
   onDelete: (symbol: string) => void;
@@ -9,6 +11,7 @@ interface StockListProps {
 export function StockList({ onDelete }: StockListProps) {
   const portfolios = usePortfolioStore((state) => state.portfolios);
   const activePortfolioId = usePortfolioStore((state) => state.activePortfolioId);
+  const { dialog, showDialog, handleConfirm, handleCancel } = useDialog();
 
   const activePortfolio = useMemo(
     () => portfolios.find((p) => p.id === activePortfolioId),
@@ -39,9 +42,18 @@ export function StockList({ onDelete }: StockListProps) {
           </div>
           <button
             onClick={() => {
-              if (confirm(`Haluatko varmasti poistaa osakkeen ${stock.symbol}?`)) {
-                onDelete(stock.symbol);
-              }
+              void (async () => {
+                const confirmed = await showDialog({
+                  title: 'Vahvista poisto',
+                  message: `Haluatko varmasti poistaa osakkeen ${stock.symbol}?`,
+                  confirmText: 'Poista',
+                  cancelText: 'Peruuta',
+                  type: 'warning',
+                });
+                if (confirmed) {
+                  onDelete(stock.symbol);
+                }
+              })();
             }}
             className="px-3 py-1 text-red-400 hover:text-red-300 hover:bg-red-500/10
                        rounded transition-colors"
@@ -51,6 +63,18 @@ export function StockList({ onDelete }: StockListProps) {
           </button>
         </div>
       ))}
+
+      {/* Dialog Component */}
+      <Dialog
+        isOpen={dialog.isOpen}
+        title={dialog.title}
+        message={dialog.message}
+        confirmText={dialog.confirmText}
+        cancelText={dialog.cancelText}
+        type={dialog.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
