@@ -62,7 +62,7 @@ export function useDailyRefresh(onRefresh?: () => void) {
           console.error('Daily refresh failed:', error);
         }
         
-        // Only reschedule if still active
+        // Only reschedule if not cancelled
         // Check again after async refresh - component could have unmounted during refresh
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!cancelled) {
