@@ -3,9 +3,9 @@
  * Uses RapidAPI to fetch stock quotes
  */
 
-const API_HOST = import.meta.env.VITE_API_HOST || 'yahoo-finance15.p.rapidapi.com';
+const API_HOST = import.meta.env.VITE_API_HOST || 'yahoo-finance.p.rapidapi.com';
 const API_BASE_URL = `https://${API_HOST}`;
-const QUOTE_ENDPOINT = '/api/v1/markets/stock/quotes';
+const QUOTE_ENDPOINT = '/api/v1/markets/stock/get-quotes';
 const DEFAULT_TIMEOUT_MS = 15000;
 const MIN_TIMEOUT_MS = 1000;
 const rawTimeout = import.meta.env.VITE_API_TIMEOUT_MS;
@@ -46,7 +46,7 @@ export async function fetchQuotes(
   const uniqueSymbols = Array.from(new Set(symbols));
   const ticker = uniqueSymbols.join(',');
 
-  const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?ticker=${encodeURIComponent(ticker)}`;
+  const url = `${API_BASE_URL}${QUOTE_ENDPOINT}?region=IN&symbols=${encodeURIComponent(ticker)}`;
 
   try {
     const response = await fetch(url, {
